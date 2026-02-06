@@ -4,7 +4,10 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14+-black.svg)](https://nextjs.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-SignalScore analyzes public signals to measure a company's AI readiness. It helps job seekers identify "AI-forward" organizations versus those still operating on legacy patterns.
+
+SignalScore analyzes public signals to measure a company's AI readiness. 
+
+ A streamlined intelligence tool that empowers employee, investors and job-seekers to instantly evaluate a company's true trajectory in the AI era. In a landscape where AI adoption forces rapid role evolution, employees currently lack reliable metrics to judge whether a company is accelerating or stagnating.
 
 ## Overview
 
