@@ -128,4 +128,29 @@ describe('CompanySearch Polling', () => {
 
         expect(screen.getByText(/Taking longer than usual/i)).toBeInTheDocument();
     });
+    it('renders idleContent when status is idle', () => {
+        render(<CompanySearch idleContent={<div data-testid="idle-content">Idle Content</div>} />);
+        expect(screen.getByTestId('idle-content')).toBeInTheDocument();
+    });
+
+    it('hides idleContent when analyzing', async () => {
+        vi.mocked(scoresApi.create).mockResolvedValue({
+            status: 'processing',
+            company_name: 'Example',
+        } as any);
+
+        vi.mocked(scoresApi.get).mockResolvedValue({ status: 'processing', company_name: 'Example' } as any);
+
+        render(<CompanySearch idleContent={<div data-testid="idle-content">Idle Content</div>} />);
+
+        expect(screen.getByTestId('idle-content')).toBeInTheDocument();
+
+        fireEvent.change(screen.getByPlaceholderText(/enter company url/i), { target: { value: 'example.com' } });
+        fireEvent.submit(screen.getByRole('button'));
+
+        // Should hide immediately when status changes to analyzing
+        await waitFor(() => {
+            expect(screen.queryByTestId('idle-content')).not.toBeInTheDocument();
+        });
+    });
 });

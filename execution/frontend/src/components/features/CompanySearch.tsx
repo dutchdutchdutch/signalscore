@@ -36,13 +36,14 @@ const USE_MOCK_DATA = false;
 
 interface CompanySearchProps {
     onCompanySelect?: (company: Company) => void;
+    idleContent?: React.ReactNode;
 }
 
 // Polling configuration
 const POLL_INTERVAL_MS = 4000;
 const TIMEOUT_MS = 240000; // 4 minutes
 
-export function CompanySearch({ onCompanySelect }: CompanySearchProps) {
+export function CompanySearch({ onCompanySelect, idleContent }: CompanySearchProps) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<Company[]>([]);
     const [scores, setScores] = useState<Record<string, ScoreResponse>>({});
@@ -248,6 +249,9 @@ export function CompanySearch({ onCompanySelect }: CompanySearchProps) {
                             INFO: {warning}
                         </div>
                     )}
+
+                    {/* Idle Content (e.g. Sample output) */}
+                    {status === 'idle' && idleContent}
                 </div>
             )}
 
