@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - signalscore-network
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////data/signalscore.db
+      - CORS_ORIGINS=["http://localhost:3000","http://frontend:3000"]
+      - AUTH_SECRET=dev-secret-change-in-production
+    volumes:
+      - ./backend/app:/app/app
+      - ../data:/data
+    networks:
+      - signalscore-network
+
+networks:
+  signalscore-network:
+    driver: bridge

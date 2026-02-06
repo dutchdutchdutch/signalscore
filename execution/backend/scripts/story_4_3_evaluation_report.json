@@ -1,0 +1,623 @@
+{
+  "timestamp": "2026-02-05T15:04:02.769432",
+  "story": "4.3 - Deep Job Analysis & Resilience",
+  "description": "Evaluation of scoring changes: ATS detection, emergency crawl, JD weight boost (1.0->2.0), marketing_only fix",
+  "results": [
+    {
+      "company": "Nike",
+      "careers_url": "https://nike.com",
+      "old_score": 7.5,
+      "new_score": 7.5,
+      "diff": 0.0,
+      "old_category": "low",
+      "new_category": "low",
+      "new_category_label": "Lagging",
+      "signals": {
+        "ai_keywords": 9,
+        "agentic_signals": 0,
+        "tool_stack": [],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": false,
+        "jobs_analyzed": 4,
+        "source_attribution": {
+          "ai_keywords": [
+            "careers_fallback"
+          ],
+          "tool_stack": [],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 30.0,
+        "agentic_signals": 0.0,
+        "tool_stack": 0.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 0.0
+      }
+    },
+    {
+      "company": "Reebok",
+      "careers_url": "https://reebok.com",
+      "old_score": 14.0,
+      "new_score": 18.0,
+      "diff": 4.0,
+      "old_category": "low",
+      "new_category": "low",
+      "new_category_label": "Lagging",
+      "signals": {
+        "ai_keywords": 0,
+        "agentic_signals": 0,
+        "tool_stack": [
+          "aws"
+        ],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": true,
+        "jobs_analyzed": 2,
+        "source_attribution": {
+          "ai_keywords": [],
+          "tool_stack": [
+            "homepage"
+          ],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 0.8
+      },
+      "component_scores": {
+        "ai_keywords": 0.0,
+        "agentic_signals": 0.0,
+        "tool_stack": 40.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 100.0
+      }
+    },
+    {
+      "company": "Nordstrom",
+      "careers_url": "https://nordstrom.com",
+      "old_score": 2.5,
+      "new_score": 2.5,
+      "diff": 0.0,
+      "old_category": "low",
+      "new_category": "low",
+      "new_category_label": "Lagging",
+      "signals": {
+        "ai_keywords": 3,
+        "agentic_signals": 0,
+        "tool_stack": [],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": false,
+        "jobs_analyzed": 2,
+        "source_attribution": {
+          "ai_keywords": [
+            "careers_fallback"
+          ],
+          "tool_stack": [],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 0.8
+      },
+      "component_scores": {
+        "ai_keywords": 10.0,
+        "agentic_signals": 0.0,
+        "tool_stack": 0.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 0.0
+      }
+    },
+    {
+      "company": "Target",
+      "careers_url": "https://target.com",
+      "old_score": 10.0,
+      "new_score": 10.0,
+      "diff": 0.0,
+      "old_category": "low",
+      "new_category": "low",
+      "new_category_label": "Lagging",
+      "signals": {
+        "ai_keywords": 0,
+        "agentic_signals": 0,
+        "tool_stack": [],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": true,
+        "jobs_analyzed": 3,
+        "source_attribution": {
+          "ai_keywords": [],
+          "tool_stack": [],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 0.0,
+        "agentic_signals": 0.0,
+        "tool_stack": 0.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 100.0
+      }
+    },
+    {
+      "company": "Stellantis",
+      "careers_url": "https://stellantis.com",
+      "old_score": 0.0,
+      "new_score": 0.0,
+      "diff": 0.0,
+      "old_category": "low",
+      "new_category": "low",
+      "new_category_label": "Lagging",
+      "signals": {
+        "ai_keywords": 0,
+        "agentic_signals": 0,
+        "tool_stack": [],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": false,
+        "jobs_analyzed": 3,
+        "source_attribution": {
+          "ai_keywords": [],
+          "tool_stack": [],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 0.0,
+        "agentic_signals": 0.0,
+        "tool_stack": 0.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 0.0
+      }
+    },
+    {
+      "company": "Careers",
+      "careers_url": "https://careers.nordstrom.com/jobs?keyword=AI%2FML",
+      "old_score": 56.3,
+      "new_score": 69.0,
+      "diff": 12.7,
+      "old_category": "medium_low",
+      "new_category": "medium_high",
+      "new_category_label": "On Par/Operational",
+      "signals": {
+        "ai_keywords": 30,
+        "agentic_signals": 3,
+        "tool_stack": [
+          "kubernetes",
+          "azure",
+          "pytorch",
+          "tensorflow",
+          "gcp",
+          "aws"
+        ],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": true,
+        "jobs_analyzed": 3,
+        "source_attribution": {
+          "ai_keywords": [
+            "homepage",
+            "careers_fallback",
+            "job_posting"
+          ],
+          "tool_stack": [
+            "job_posting",
+            "job_posting",
+            "job_posting",
+            "job_posting",
+            "job_posting",
+            "job_posting"
+          ],
+          "agentic_signals": [
+            "job_posting"
+          ],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 100.0,
+        "agentic_signals": 20.0,
+        "tool_stack": 100.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 100.0
+      }
+    },
+    {
+      "company": "Shopify",
+      "careers_url": "https://shopify.com",
+      "old_score": 25.0,
+      "new_score": 27.5,
+      "diff": 2.5,
+      "old_category": "low",
+      "new_category": "low",
+      "new_category_label": "Lagging",
+      "signals": {
+        "ai_keywords": 21,
+        "agentic_signals": 0,
+        "tool_stack": [],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": true,
+        "jobs_analyzed": 4,
+        "source_attribution": {
+          "ai_keywords": [
+            "homepage",
+            "careers_fallback",
+            "job_posting"
+          ],
+          "tool_stack": [],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 70.0,
+        "agentic_signals": 0.0,
+        "tool_stack": 0.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 100.0
+      }
+    },
+    {
+      "company": "Netflix",
+      "careers_url": "https://netflix.com",
+      "old_score": 0.0,
+      "new_score": 0.8,
+      "diff": 0.8,
+      "old_category": "low",
+      "new_category": "low",
+      "new_category_label": "Lagging",
+      "signals": {
+        "ai_keywords": 1,
+        "agentic_signals": 0,
+        "tool_stack": [],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": false,
+        "jobs_analyzed": 4,
+        "source_attribution": {
+          "ai_keywords": [
+            "job_posting"
+          ],
+          "tool_stack": [],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 3.3,
+        "agentic_signals": 0.0,
+        "tool_stack": 0.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 0.0
+      }
+    },
+    {
+      "company": "Explore",
+      "careers_url": "https://explore.jobs.netflix.net/careers?query=AI%2FML",
+      "old_score": 20.8,
+      "new_score": 20.8,
+      "diff": 0.0,
+      "old_category": "low",
+      "new_category": "low",
+      "new_category_label": "Lagging",
+      "signals": {
+        "ai_keywords": 13,
+        "agentic_signals": 0,
+        "tool_stack": [],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": true,
+        "jobs_analyzed": 2,
+        "source_attribution": {
+          "ai_keywords": [
+            "homepage",
+            "careers_fallback"
+          ],
+          "tool_stack": [],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 0.8
+      },
+      "component_scores": {
+        "ai_keywords": 43.3,
+        "agentic_signals": 0.0,
+        "tool_stack": 0.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 100.0
+      }
+    },
+    {
+      "company": "Stripe",
+      "careers_url": "https://stripe.com",
+      "old_score": 65.0,
+      "new_score": 68.3,
+      "diff": 3.3,
+      "old_category": "medium_high",
+      "new_category": "medium_high",
+      "new_category_label": "On Par/Operational",
+      "signals": {
+        "ai_keywords": 26,
+        "agentic_signals": 14,
+        "tool_stack": [
+          "github",
+          "aws"
+        ],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": true,
+        "jobs_analyzed": 4,
+        "source_attribution": {
+          "ai_keywords": [
+            "homepage",
+            "about_fallback",
+            "job_posting"
+          ],
+          "tool_stack": [
+            "homepage",
+            "careers_fallback"
+          ],
+          "agentic_signals": [
+            "homepage",
+            "about_fallback"
+          ],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 86.7,
+        "agentic_signals": 93.3,
+        "tool_stack": 40.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 100.0
+      }
+    },
+    {
+      "company": "Fidelity",
+      "careers_url": "https://fidelity.com",
+      "old_score": 10.0,
+      "new_score": 10.0,
+      "diff": 0.0,
+      "old_category": "low",
+      "new_category": "low",
+      "new_category_label": "Lagging",
+      "signals": {
+        "ai_keywords": 0,
+        "agentic_signals": 0,
+        "tool_stack": [],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": true,
+        "jobs_analyzed": 4,
+        "source_attribution": {
+          "ai_keywords": [],
+          "tool_stack": [],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 0.0,
+        "agentic_signals": 0.0,
+        "tool_stack": 0.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 100.0
+      }
+    },
+    {
+      "company": "Underarmour",
+      "careers_url": "https://underarmour.com",
+      "old_score": 37.0,
+      "new_score": 55.0,
+      "diff": 18.0,
+      "old_category": "medium_low",
+      "new_category": "medium_low",
+      "new_category_label": "Trailing",
+      "signals": {
+        "ai_keywords": 30,
+        "agentic_signals": 0,
+        "tool_stack": [
+          "gcp",
+          "aws",
+          "v0"
+        ],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": false,
+        "jobs_analyzed": 3,
+        "source_attribution": {
+          "ai_keywords": [
+            "job_posting"
+          ],
+          "tool_stack": [
+            "job_posting",
+            "job_posting",
+            "job_posting"
+          ],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 100.0,
+        "agentic_signals": 0.0,
+        "tool_stack": 100.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 0.0
+      }
+    },
+    {
+      "company": "Safeway",
+      "careers_url": "https://safeway.com",
+      "old_score": 13.3,
+      "new_score": 13.3,
+      "diff": 0.0,
+      "old_category": "low",
+      "new_category": "low",
+      "new_category_label": "Lagging",
+      "signals": {
+        "ai_keywords": 16,
+        "agentic_signals": 0,
+        "tool_stack": [],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": false,
+        "jobs_analyzed": 2,
+        "source_attribution": {
+          "ai_keywords": [
+            "homepage",
+            "careers_fallback"
+          ],
+          "tool_stack": [],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 0.8
+      },
+      "component_scores": {
+        "ai_keywords": 53.3,
+        "agentic_signals": 0.0,
+        "tool_stack": 0.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 0.0
+      }
+    },
+    {
+      "company": "Ibm",
+      "careers_url": "https://ibm.com",
+      "old_score": 53.0,
+      "new_score": 53.0,
+      "diff": 0.0,
+      "old_category": "medium_low",
+      "new_category": "medium_low",
+      "new_category_label": "Trailing",
+      "signals": {
+        "ai_keywords": 30,
+        "agentic_signals": 6,
+        "tool_stack": [],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": true,
+        "jobs_analyzed": 4,
+        "source_attribution": {
+          "ai_keywords": [
+            "homepage",
+            "careers_fallback",
+            "about_fallback",
+            "job_posting"
+          ],
+          "tool_stack": [],
+          "agentic_signals": [
+            "homepage"
+          ],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 100.0,
+        "agentic_signals": 40.0,
+        "tool_stack": 0.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 100.0
+      }
+    },
+    {
+      "company": "Slalom",
+      "careers_url": "https://slalom.com",
+      "old_score": 28.7,
+      "new_score": 39.0,
+      "diff": 10.3,
+      "old_category": "low",
+      "new_category": "medium_low",
+      "new_category_label": "Trailing",
+      "signals": {
+        "ai_keywords": 30,
+        "agentic_signals": 0,
+        "tool_stack": [
+          "aws",
+          "openai",
+          "copilot",
+          "snowflake"
+        ],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": false,
+        "jobs_analyzed": 3,
+        "source_attribution": {
+          "ai_keywords": [
+            "homepage",
+            "careers_fallback",
+            "job_posting"
+          ],
+          "tool_stack": [
+            "homepage",
+            "homepage",
+            "homepage",
+            "homepage"
+          ],
+          "agentic_signals": [],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 100.0,
+        "agentic_signals": 0.0,
+        "tool_stack": 70.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 0.0
+      }
+    },
+    {
+      "company": "Google",
+      "careers_url": "https://www.google.com",
+      "old_score": 6.5,
+      "new_score": 6.5,
+      "diff": 0.0,
+      "old_category": "low",
+      "new_category": "low",
+      "new_category_label": "Lagging",
+      "signals": {
+        "ai_keywords": 3,
+        "agentic_signals": 3,
+        "tool_stack": [],
+        "non_eng_ai_roles": 0,
+        "has_ai_platform_team": false,
+        "jobs_analyzed": 3,
+        "source_attribution": {
+          "ai_keywords": [
+            "about_fallback"
+          ],
+          "tool_stack": [],
+          "agentic_signals": [
+            "about_fallback"
+          ],
+          "non_eng_ai_roles": []
+        },
+        "marketing_only": false,
+        "confidence_score": 1.0
+      },
+      "component_scores": {
+        "ai_keywords": 10.0,
+        "agentic_signals": 20.0,
+        "tool_stack": 0.0,
+        "non_eng_ai": 0.0,
+        "ai_platform_team": 0.0
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+[
+    {
+        "domain": "stripe.com",
+        "expected_score": 85,
+        "tolerance": 10.0,
+        "notes": "Strong AI engineering blog, clear signals of agentic architecture (MCP), github.com/stripe/agent-toolkit"
+    },
+    {
+        "domain": "dropbox.com",
+        "expected_score": 75,
+        "tolerance": 10.0,
+        "notes": "AI-first capabilities (Dropbox Dash), consistent AI hiring"
+    },
+    {
+        "domain": "example.com",
+        "expected_score": 10,
+        "tolerance": 5.0,
+        "notes": "Generic placeholder, should score low"
+    }
+]

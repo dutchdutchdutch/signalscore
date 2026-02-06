@@ -1,0 +1,81 @@
+:root {
+  /* ==========================================================================
+     Color Palette (System Minimal - Dark Mode)
+     ========================================================================== */
+  
+  /* Base Surfaces */
+  --bg-base: #0A0A0A;      /* Main app background - Near black */
+  --bg-surface: #171717;   /* Cards, Sidebars - Subtle contrast */
+  
+  /* Borders */
+  --border-subtle: #262626; /* Primary structural border (1px) */
+  --border-active: #525252; /* Hover state or active element */
+
+  /* Text Colors */
+  --text-primary: #EDEDED;   /* Headings, Primary Data */
+  --text-secondary: #A1A1AA; /* Labels, Metadata */
+  --text-tertiary: #525252;  /* Disabled, Placeholder */
+
+  /* Semantic Status Colors (Signal) */
+  --color-success: #22C55E;  /* High Score, Growth */
+  --color-warning: #F59E0B;  /* Medium Score, Caution */
+  --color-danger: #EF4444;   /* Low Score, Error */
+  --color-neutral: #525252;  /* No Data, Neutral */
+
+  /* ==========================================================================
+     Typography
+     ========================================================================== */
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace; /* Use for tabular numbers */
+
+  /* Font Weights */
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-bold: 700; /* Use sparingly for hero numbers */
+
+  /* ==========================================================================
+     Spacing (4px Baseline Grid)
+     ========================================================================== */
+  
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px; /* Standard Card Padding */
+  --space-6: 24px;
+  --space-8: 32px;
+  
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px; /* Buttons */
+  --radius-lg: 8px; /* Cards */
+
+  /* ==========================================================================
+     Component Specs
+     ========================================================================== */
+  
+  --card-shadow: none; /* Flat design */
+  --header-height: 64px;
+  --sidebar-width: 240px;
+}
+
+/* Utility Utilities for "System Minimal" Vibe */
+
+.font-tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.text-code {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--color-warning); /* Or other semantic color */
+}
+
+/* Resets for Dark Mode Preference */
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}

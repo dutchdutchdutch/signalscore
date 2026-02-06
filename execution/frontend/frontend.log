@@ -1,0 +1,78 @@
+
+> signalscore-frontend@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+
+ ✓ Starting...
+ ✓ Ready in 806ms
+ ○ Compiling / ...
+ ✓ Compiled / in 687ms (481 modules)
+ GET / 200 in 809ms
+ ✓ Compiled in 73ms (250 modules)
+(node:83684) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ GET / 200 in 106ms
+ ✓ Compiled in 401ms (250 modules)
+ ✓ Compiled in 119ms (250 modules)
+ ✓ Compiled in 340ms (483 modules)
+ ✓ Compiled in 330ms (483 modules)
+ ✓ Compiled in 121ms (483 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/dutch/Dev/signalscore/execution/frontend/.next/cache/webpack/client-development/0.pack.gz_' -> '/Users/dutch/Dev/signalscore/execution/frontend/.next/cache/webpack/client-development/0.pack.gz'
+ ✓ Compiled in 268ms (483 modules)
+ ✓ Compiled in 191ms (483 modules)
+ ✓ Compiled in 297ms (483 modules)
+ ✓ Compiled in 134ms (483 modules)
+ ✓ Compiled in 174ms (251 modules)
+ ✓ Compiled in 239ms (251 modules)
+ ✓ Compiled in 379ms (483 modules)
+ ✓ Compiled in 220ms (251 modules)
+ ✓ Compiled in 149ms (483 modules)
+ ⨯ ./src/components/ui/CompanyCard.tsx
+Error: 
+  [31mx[0m Expected ';', '}' or <eof>
+     ,-[[36;1;4m/Users/dutch/Dev/signalscore/execution/frontend/src/components/ui/CompanyCard.tsx[0m:159:1]
+ [2m159[0m |     </div>
+ [2m160[0m |     
+ [2m161[0m |     {/* Arrow indicator */ }
+ [2m162[0m | [31;1m,[0m[31;1m-[0m[31;1m>[0m       <div className="company-arrow">
+ [2m163[0m | [31;1m|[0m           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+ [2m164[0m | [31;1m|[0m             <path d="M5 12h14M12 5l7 7-7 7" />
+ [2m165[0m | [31;1m|[0m           </svg>
+ [2m166[0m | [31;1m|[0m         </div>
+ [2m167[0m | [31;1m|[0m   
+ [2m168[0m | [31;1m|[0m[31;1m-[0m[31;1m>[0m       <style jsx>{`
+     : [31;1m`[0m[31;1m---[0m[33;1m             ^^^[0m
+     : [31;1m`[0m[31;1m---[0m[31;1m-[0m [31;1mThis is the expression part of an expression statement[0m
+ [2m169[0m |             .company-card {
+ [2m170[0m |               display: flex;
+ [2m171[0m |               align-items: center;
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/components/ui/CompanyCard.tsx
+./src/components/ui/SearchResults.tsx
+./src/components/features/CompanySearch.tsx
+./src/app/page.tsx
+ ✓ Compiled in 391ms (525 modules)
+ ✓ Compiled in 293ms (272 modules)
+ ✓ Compiled in 98ms (272 modules)
+ ✓ Compiled in 220ms (272 modules)
+ ✓ Compiled in 139ms (272 modules)
+ ✓ Compiled in 87ms (272 modules)
+ ✓ Compiled in 387ms (525 modules)
+ ✓ Compiled in 135ms (272 modules)
+ ✓ Compiled in 224ms (272 modules)
+ ✓ Compiled in 368ms (272 modules)
+ GET / 200 in 111ms
+ ✓ Compiled /signal/[slug] in 207ms (531 modules)
+[?25h
+npm notice
+npm notice New minor version of npm available! 11.7.0 -> 11.9.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.9.0
+npm notice To update run: npm install -g npm@11.9.0
+npm notice

@@ -1,0 +1,36 @@
+C4Component
+    title Component Diagram - Backend Service (Python/FastAPI)
+
+    Container(api_gateway, "API Router", "FastAPI", "Routing, Input Validation, and Auth checks.")
+    
+    Component(orchestrator, "Scraping Orchestrator", "Service", "Coordinates scraping jobs. Manages HTTP/Selenium strategies.")
+    Component(discovery, "Discovery Service", "Hybrid Discovery", "Finds sources via Search, Subdomain Scanning, and ATS Detection.")
+    Component(subdomain_scanner, "Subdomain Scanner", "Discovery Logic", "Checks high-signal prefixes (ai.*, labs.*) for valid portals.")
+    Component(ats_detector, "ATS Detector", "Heuristic Logic", "Identifies Applicant Tracking Systems (Greenhouse, Lever).")
+
+    Component(scraper_impl, "Scraper Implementations", "BeautifulSoup / Playwright", "Extracts raw text and metadata from web pages.")
+    Component(scoring_service, "Scoring Service", "Domain Logic", "Orchestrates signal extraction, scoring, and persistence.")
+    Component(score_engine, "Score Calculator", "Domain Logic", "Calculates AI Readiness Score. Includes Signal Booster logic.")
+    Component(repo, "Data Repository", "SQLAlchemy", "Abstracts DB access for Companies, Scores, and CompanySources.")
+
+    ContainerDb(db, "Database", "SQLite/Postgres", "Stores persistent data including Company Sources.")
+    System_Ext(external_web, "Target Websites", "Public internet content (blogs, GitHub, careers).")
+    System_Ext(search_api, "DuckDuckGo", "Text-based web search API.")
+
+    Rel(api_gateway, scoring_service, "Triggers scoring jobs", "Async")
+    Rel(api_gateway, repo, "Reads company data")
+    
+    Rel(scoring_service, discovery, "Calls for source research")
+    Rel(discovery, search_api, "Searches web")
+    Rel(discovery, subdomain_scanner, "Scans prefixes")
+    Rel(discovery, ats_detector, "Detects ATS")
+    Rel(subdomain_scanner, external_web, "Probes (HEAD requests)")
+    
+    Rel(scoring_service, orchestrator, "Requests scrape via orchestrator")
+    Rel(orchestrator, scraper_impl, "Executes")
+    Rel(scraper_impl, external_web, "Fetches pages")
+    
+    Rel(scoring_service, score_engine, "Requests score calculation")
+    Rel(score_engine, repo, "Reads signal weights/thresholds")
+    
+    Rel(scoring_service, repo, "Saves Scores and CompanySources")

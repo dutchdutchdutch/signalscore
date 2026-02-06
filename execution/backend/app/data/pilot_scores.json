@@ -1,0 +1,103 @@
+{
+    "pilot_companies": [
+        {
+            "company_name": "Shopify",
+            "careers_url": "https://www.shopify.com/careers",
+            "signals": {
+                "ai_keywords": 17,
+                "agentic_signals": 1,
+                "tool_stack": [],
+                "non_eng_ai_roles": 0,
+                "has_ai_platform_team": true,
+                "jobs_analyzed": 5
+            },
+            "evidence": [
+                "17 AI/ML keywords found across 5 jobs",
+                "AI mentioned in company culture: 'reflexive use of AI'",
+                "Dedicated AI/ML recruiting role exists",
+                "CEO's AI memo referenced on careers page"
+            ]
+        },
+        {
+            "company_name": "Nordstrom",
+            "careers_url": "https://careers.nordstrom.com",
+            "signals": {
+                "ai_keywords": 23,
+                "agentic_signals": 8,
+                "tool_stack": [
+                    "sagemaker",
+                    "vertex ai"
+                ],
+                "non_eng_ai_roles": 0,
+                "has_ai_platform_team": false,
+                "jobs_analyzed": 5
+            },
+            "evidence": [
+                "23 AI/ML keywords found across 5 jobs",
+                "Tool stack: SageMaker, Vertex AI",
+                "8 agentic/automation signals",
+                "Principal Data Science & ML Engineer role with enterprise ML focus"
+            ]
+        },
+        {
+            "company_name": "Target",
+            "careers_url": "https://corporate.target.com/careers",
+            "signals": {
+                "ai_keywords": 12,
+                "agentic_signals": 12,
+                "tool_stack": [
+                    "openai"
+                ],
+                "non_eng_ai_roles": 0,
+                "has_ai_platform_team": true,
+                "jobs_analyzed": 5
+            },
+            "evidence": [
+                "12 AI/ML keywords found across 5 jobs",
+                "Tool stack: OpenAI",
+                "12 agentic/automation signals",
+                "Lead Engineer Backend (Generative AI) role requires agentic framework experience",
+                "Build robust systems that mitigate hallucinations and improve AI reliability"
+            ]
+        },
+        {
+            "company_name": "Macy's",
+            "careers_url": "https://ebwh.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/jobs",
+            "signals": {
+                "ai_keywords": 0,
+                "agentic_signals": 0,
+                "tool_stack": [],
+                "non_eng_ai_roles": 0,
+                "has_ai_platform_team": true,
+                "jobs_analyzed": 5
+            },
+            "evidence": [
+                "0 AI/ML keywords detected in job descriptions",
+                "Has Sr. Director, Enterprise AI Strategy role (title only)",
+                "AI strategy phase - not yet embedded in operational requirements"
+            ]
+        },
+        {
+            "company_name": "Stellantis",
+            "careers_url": "https://careers.stellantis.com",
+            "signals": {
+                "ai_keywords": 0,
+                "agentic_signals": 2,
+                "tool_stack": [],
+                "non_eng_ai_roles": 0,
+                "has_ai_platform_team": false,
+                "jobs_analyzed": 6
+            },
+            "evidence": [
+                "0 AI/ML keywords across 6 jobs (Engineering, Marketing, Legal)",
+                "2 basic automation signals",
+                "Traditional auto manufacturing profile confirmed"
+            ]
+        }
+    ],
+    "metadata": {
+        "generated_at": "2026-02-03T22:57:00Z",
+        "version": "1.0.0",
+        "source": "validation_sprint"
+    }
+}

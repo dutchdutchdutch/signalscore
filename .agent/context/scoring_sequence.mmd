@@ -1,0 +1,51 @@
+sequenceDiagram
+    actor Admin as Admin/User
+    participant API as API Service
+    participant Service as ScoringService
+    participant Discovery as DiscoveryService
+    participant Orch as ScraperOrchestrator
+    participant Context as ContextAggregator
+    participant Calc as ScoreCalculator
+    participant DB as Database
+
+    Title: SignalScore: Deep Scoring & Discovery Flow
+
+    Admin->>API: POST /score (company, url)
+    API->>Service: manual_rescore(company, url)
+    
+    rect rgb(240, 240, 255)
+        note right of Service: Phase 1: Deep Discovery
+        Service->>Discovery: find_sources(company)
+        
+        par Parallel Search
+            Discovery->>Discovery: Google Search (Blogs, GitHub)
+            Discovery->>Discovery: Subdomain Scan (ai.*, engineering.*)
+            Discovery->>Discovery: ATS Detection
+        end
+        
+        Discovery-->>Service: List[CompanySource]
+        Service->>DB: Save discovered sources (CompanySource)
+    end
+    
+    rect rgb(255, 245, 240)
+        note right of Service: Phase 2: Multi-Source Scraping
+        loop For each source (Homepage, Careers, Blog, GitHub)
+            Service->>Orch: scrape(url)
+            Orch-->>Service: HTML Content
+        end
+    end
+
+    rect rgb(240, 255, 240)
+        note right of Service: Phase 3: Synthesis & Scoring
+        Service->>Context: aggregate_context(contents)
+        Context-->>Service: SignalData (Keywords, Tools, Roles)
+        
+        Service->>Calc: calculate_score(SignalData)
+        
+        note right of Calc: Logic: Weights, Caps, Boosters
+        Calc-->>Service: CompanyScore (0-100)
+    end
+
+    Service->>DB: Save Score (Score History)
+    Service-->>API: Result
+    API-->>Admin: JSON Response

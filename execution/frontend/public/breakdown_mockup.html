@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SignalScore Breakdown Mockup</title>
+    <style>
+        :root {
+            --color-background: #0a0a0a;
+            --color-surface: #171717;
+            --color-surface-alt: #262626;
+            --color-border: #404040;
+            --color-primary: #fbbf24;
+            --color-text-primary: #ffffff;
+            --color-text-secondary: #a3a3a3;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            --font-sans: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--color-background);
+            color: var(--color-text-primary);
+            font-family: var(--font-sans);
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+        }
+
+        h2 { margin-bottom: 24px; }
+
+        .breakdown-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 16px;
+            border-bottom: 1px solid var(--color-border);
+            vertical-align: middle;
+        }
+
+        th {
+            background: var(--color-surface-alt);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-secondary);
+            font-weight: 600;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Column Specific Styles */
+        .col-category {
+            font-weight: 600;
+            color: var(--color-text-primary);
+            font-size: 15px;
+            width: 25%;
+        }
+
+        .col-desc {
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            line-height: 1.4;
+        }
+
+        .col-score, .col-weight {
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--color-text-secondary);
+            text-align: center;
+            width: 10%;
+        }
+
+        .col-contribution {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--color-primary);
+            font-size: 16px;
+            text-align: right;
+            width: 15%;
+        }
+
+        .calc-hint {
+            font-size: 10px;
+            color: var(--color-text-secondary);
+            display: block;
+            margin-top: 2px;
+            font-weight: 400;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Category Breakdown (Table Layout)</h2>
+        
+        <table class="breakdown-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th style="text-align: center;">Score (0-100)</th>
+                    <th style="text-align: center;">Weight</th>
+                    <th style="text-align: right;">Contribution</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="col-category">AI Keywords</td>
+                    <td class="col-desc">Volume and relevance of AI terms in job listings.</td>
+                    <td class="col-score">36.7</td>
+                    <td class="col-weight">25%</td>
+                    <td class="col-contribution">+9.2</td>
+                </tr>
+                <tr>
+                    <td class="col-category">Agentic Signals</td>
+                    <td class="col-desc">Evidence of autonomous agents workflows and advanced automation.</td>
+                    <td class="col-score">46.7</td>
+                    <td class="col-weight">20%</td>
+                    <td class="col-contribution">+9.3</td>
+                </tr>
+                <tr>
+                    <td class="col-category">Modern Tool Stack</td>
+                    <td class="col-desc">Adoption of leading AI/ML frameworks and tools.</td>
+                    <td class="col-score">20.0</td>
+                    <td class="col-weight">20%</td>
+                    <td class="col-contribution">+4.0</td>
+                </tr>
+                <tr>
+                    <td class="col-category">AI in Non-Engineering Roles</td>
+                    <td class="col-desc">Presence of AI-focused roles outside of engineering (Product, Design, Ethics).</td>
+                    <td class="col-score">0.0</td>
+                    <td class="col-weight">25%</td>
+                    <td class="col-contribution">+0.0</td>
+                </tr>
+                <tr>
+                    <td class="col-category">AI Platform Team</td>
+                    <td class="col-desc">Dedicated infrastructure teams building internal AI platforms.</td>
+                    <td class="col-score">100.0</td>
+                    <td class="col-weight">10%</td>
+                    <td class="col-contribution">+10.0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

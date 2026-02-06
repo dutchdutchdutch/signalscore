@@ -1,0 +1,23 @@
+C4Container
+    title Container Diagram for SignalScore
+
+    Person(user, "User", "Job Seeker or Tech Lead")
+
+    System_Boundary(c1, "SignalScore System") {
+        Container(webapp, "Web Application", "Next.js (App Router)", "Delivers UI, handles public traffic (SSR/SEO). Acts as BFF.")
+        Container(backend, "API / Worker", "Python (FastAPI)", "Handles scraping, scoring logic, and data processing. Not exposed publicly.")
+        ContainerDb(database, "Database", "SQLite (MVP) -> Postgres", "Stores company profiles (companies), scores (scores), and signal sources (company_sources).")
+    }
+
+    System_Ext(external_web, "Public Web", "Source of truth for signals (Blogs, GitHub, Jobs).")
+    System_Ext(search_api, "Search API", "DuckDuckGo for automated source discovery.")
+    System_Ext(company_ecosystem, "Company Ecosystem", "Subdomains (ai.*) and ATS (Greenhouse/Lever).")
+
+    Rel(user, webapp, "Browses via HTTPS")
+    
+    Rel(webapp, backend, "Proxies API requests (Internal Network)", "HTTP/JSON")
+    Rel(backend, database, "Reads/Writes", "SQLAlchemy")
+    
+    Rel(backend, external_web, "Scrapes (httpx/Playwright)")
+    Rel(backend, search_api, "Discovers Sources")
+    Rel(backend, company_ecosystem, "Scans & Scrapes (Direct)")

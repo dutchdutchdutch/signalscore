@@ -1,0 +1,84 @@
+{
+  "timestamp": "2026-02-03T22:51:43.569049",
+  "comparisons": [
+    {
+      "name": "RETAIL: Target vs Nordstrom vs Macy's",
+      "companies": [
+        "Target",
+        "Nordstrom",
+        "Macy's"
+      ]
+    },
+    {
+      "name": "AUTO: Tesla vs Stellantis",
+      "companies": [
+        "Tesla",
+        "Stellantis"
+      ]
+    }
+  ],
+  "analysis": [
+    {
+      "company": "Target",
+      "jobs_analyzed": 5,
+      "total_ai_keywords": 12,
+      "ai_role_percentage": 80.0,
+      "non_eng_ai_roles": 0,
+      "tools_mentioned": [
+        "openai"
+      ],
+      "agentic_signals_count": 12,
+      "sample_quotes": [
+        "Build robust systems that mitigate hallucinations and improve AI reliability",
+        "Experience building agentic frameworks and AI-driven automation for process enhancement Position Overview : To succeed in this role, you\u2019ll bring over 7+ years of experience in software design and development, with 5+ years focused on building scalable backend applications"
+      ]
+    },
+    {
+      "company": "Nordstrom",
+      "jobs_analyzed": 5,
+      "total_ai_keywords": 23,
+      "ai_role_percentage": 40.0,
+      "non_eng_ai_roles": 0,
+      "tools_mentioned": [
+        "vertex ai",
+        "sagemaker"
+      ],
+      "agentic_signals_count": 8,
+      "sample_quotes": [
+        "The Principal ML Engineer will collaborate closely with data scientists, software engineers, and product teams to translate complex business problems into production-ready solutions",
+        "You will drive architectural decisions for high-performance computing and cloud-based ML platforms, ensuring scalability and security",
+        "Your role is critical in delivering robust, scalable, and efficient machine learning solutions that support business growth and innovation"
+      ]
+    },
+    {
+      "company": "Macy's",
+      "jobs_analyzed": 5,
+      "total_ai_keywords": 0,
+      "ai_role_percentage": 0.0,
+      "non_eng_ai_roles": 0,
+      "tools_mentioned": [],
+      "agentic_signals_count": 0,
+      "sample_quotes": []
+    },
+    {
+      "company": "Tesla",
+      "jobs_analyzed": 0,
+      "total_ai_keywords": 0,
+      "ai_role_percentage": 0,
+      "non_eng_ai_roles": 0,
+      "tools_mentioned": [],
+      "agentic_signals_count": 0,
+      "sample_quotes": []
+    },
+    {
+      "company": "Stellantis",
+      "jobs_analyzed": 6,
+      "total_ai_keywords": 0,
+      "ai_role_percentage": 0.0,
+      "non_eng_ai_roles": 0,
+      "tools_mentioned": [],
+      "agentic_signals_count": 2,
+      "sample_quotes": []
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+C4Context
+    title System Context Diagram for SignalScore
+
+    Person(job_seeker, "Job Seeker", "Looking for AI-forward companies to avoid career stagnation.")
+    Person(tech_lead, "Tech Lead / VP", "Benchmarking their company's AI readiness signaling.")
+    Person(admin, "Admin Operator", "Manages scraper patterns and overrides scores.")
+
+    System(signalscore, "SignalScore", "Analyzes public signals to score companies on AI readiness.")
+
+    System_Ext(public_web, "Public Web", "Company careers pages, blogs, 10-K filings.")
+    System_Ext(llm_service, "LLM Service", "AI Model provider for semantic analysis/scoring.")
+    System_Ext(search_engines, "Search Engines", "Google/Bing indexing the site.")
+    System_Ext(company_ecosystem, "Company Ecosystem", "Dedicated subdomains (ai.*) and Application Tracking Systems.")
+
+    Rel(job_seeker, signalscore, "Searches companies, views scores")
+    Rel(tech_lead, signalscore, "Checks own company score")
+    Rel(admin, signalscore, "Tunes scrapers, verifies data")
+
+    Rel(signalscore, public_web, "Scrapes content")
+    Rel(signalscore, llm_service, "Sends content for analysis")
+    Rel(search_engines, signalscore, "Crawls public profiles")
+    Rel(signalscore, company_ecosystem, "Directly scans & discovers")
