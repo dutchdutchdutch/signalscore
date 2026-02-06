@@ -8,6 +8,7 @@
  */
 
 import { CompanySearch } from '@/components/features/CompanySearch';
+import { Footer } from '@/components/ui/Footer';
 
 export default function Home() {
   return (
@@ -28,12 +29,11 @@ export default function Home() {
         <CompanySearch />
       </section>
 
-      {/* Footer hint */}
-      <footer className="hint">
-        <p>
-          Press <kbd>/</kbd> to focus search • Try searching &quot;ACME&quot; or &quot;Stripe&quot;
-        </p>
-      </footer>
+      <div className="spacer" />
+
+
+
+      <Footer />
 
       <style jsx>{`
         .home {
@@ -78,6 +78,10 @@ export default function Home() {
           max-width: 640px;
           display: flex;
           justify-content: center;
+        }
+
+        .spacer {
+          height: 320px; /* Approx 2-3 card heights */
         }
 
         .hint {

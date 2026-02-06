@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Footer } from '@/components/ui/Footer';
 import { ScoreDisplay, categoryColors } from '@/components/ui/ScoreDisplay';
 import { scoresApi, ApiError } from '@/lib/api-client';
 import type { ScoreResponse } from '@/lib/api-client/schema';
@@ -390,15 +391,7 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
 
       </main>
 
-      <footer className="page-footer">
-        <div className="container">
-          <h3>Signal Model</h3>
-          <p>
-            Our scoring philosophy is based on observable public signals of AI adoption.
-            <a href="#" className="placeholder-link"> Read about our methodology</a>
-          </p>
-        </div>
-      </footer>
+      <Footer />
 
       <style jsx>{`
         .page-container {
@@ -669,26 +662,9 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
           min-width: 140px;
           text-align: center;
         }
-        .scale-range {
-          font-family: var(--font-mono);
-          width: 60px;
-          color: var(--color-text-secondary);
-        }
         .scale-desc {
           font-size: 14px;
           color: var(--color-text-secondary);
-        }
-
-        /* Footer */
-        .page-footer {
-          border-top: 1px solid var(--color-border);
-          padding: 40px 0;
-          text-align: center;
-          color: var(--color-text-secondary);
-        }
-        .placeholder-link {
-          color: var(--color-primary);
-          text-decoration: underline;
         }
 
         @media (max-width: 640px) {
