@@ -1,7 +1,7 @@
 # Story 5-7: User URL Submissions
 
 ## Status
-- **Status:** in-progress
+- **Status:** done
 - **Priority:** Medium
 - **Effort:** Medium
 
