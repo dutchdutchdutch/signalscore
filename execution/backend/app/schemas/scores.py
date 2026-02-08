@@ -39,6 +39,7 @@ class SourceResponse(BaseModel):
 class ScoreResponse(BaseModel):
     """Response when scoring is complete."""
     status: str = "completed"
+    company_id: Optional[int] = None
     company_name: str
     careers_url: Optional[str] = None
     score: float

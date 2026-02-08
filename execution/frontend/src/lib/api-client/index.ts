@@ -5,7 +5,7 @@
  * Provides typed methods for all API endpoints.
  */
 
-import {
+import type {
     CompanyList,
     Company,
     CompanyCreate,
@@ -14,6 +14,7 @@ import {
     ScoreResponse,
     ScoringStatusResponse,
     ScoreRequest,
+    SourceSubmissionResponse,
 } from './schema';
 
 // API base URL - uses Next.js rewrites in development
@@ -122,6 +123,19 @@ export const companiesApi = {
         return apiFetch<Company>('/companies', {
             method: 'POST',
             body: JSON.stringify(data),
+        });
+    },
+
+    /**
+     * Submit sources for a company
+     */
+    async submitSources(
+        companyId: number,
+        urls: string[]
+    ): Promise<SourceSubmissionResponse> {
+        return apiFetch<SourceSubmissionResponse>(`/companies/${companyId}/sources`, {
+            method: 'POST',
+            body: JSON.stringify({ urls }),
         });
     },
 };

@@ -68,6 +68,7 @@ class ScoringService:
             if company.scores:
                 latest_score = company.scores[0] # Assumes desc order
                 return ScoreResponse(
+                    company_id=company.id,
                     company_name=company.name,
                     careers_url=company.careers_url,
                     score=round(latest_score.score, 1),
@@ -119,9 +120,35 @@ class ScoringService:
         
         discovery = DiscoveryService()
         log_trace("DiscoveryService: Finding sources")
-        discovered_sources = discovery.find_sources(company_name, domain)
+        discovered_sources = discovery.find_sources(company_name, root_domain)
         log_trace("DiscoveryService Results", {"count": len(discovered_sources), "sources": [s['url'] for s in discovered_sources]})
         print(f"Discovered {len(discovered_sources)} potential sources: {[s['url'] for s in discovered_sources]}")
+
+        # Story 5-7: Load Verified User/Admin Sources
+        from app.models.enums import VerificationStatus
+        
+        # We need to find the company by domain to get its sources
+        stmt = select(Company).where(Company.domain == root_domain)
+        existing_company = self.db.execute(stmt).scalars().first()
+        
+        if existing_company:
+            # Load verified sources
+            saved_sources = self.db.execute(
+                select(CompanySource).where(
+                    CompanySource.company_id == existing_company.id,
+                    CompanySource.verification_status == VerificationStatus.VERIFIED,
+                    CompanySource.is_active == True
+                )
+            ).scalars().all()
+            
+            if saved_sources:
+                log_trace("Loaded verified sources from DB", {"count": len(saved_sources)})
+                print(f"Loaded {len(saved_sources)} verified sources from DB")
+                
+                for s in saved_sources:
+                     # Add to discovered_sources if not present
+                     if not any(d['url'] == s.url for d in discovered_sources):
+                          discovered_sources.append({"url": s.url, "type": s.source_type})
 
         # 3. Scrape Main URL
         try:

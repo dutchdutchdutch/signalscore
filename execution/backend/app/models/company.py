@@ -102,6 +102,14 @@ class CompanySource(Base):
     source_type: Mapped[str] = mapped_column(String(50), nullable=False) # storing enum as string
     is_active: Mapped[bool] = mapped_column(default=True)
     
+    # Story 5-7: User Submissions
+    verification_status: Mapped[str] = mapped_column(
+        String(20), 
+        default="verified", # Default to verified for backward compatibility/scraped sources
+        nullable=False
+    )
+    submitted_by: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    
     company: Mapped["Company"] = relationship(back_populates="sources")
     
     last_scraped_at: Mapped[datetime] = mapped_column(

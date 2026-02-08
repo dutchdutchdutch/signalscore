@@ -157,6 +157,7 @@ export interface components {
         };
         ScoreResponse: {
             status: "completed";
+            company_id?: number;
             company_name: string;
             careers_url?: string | null;
             score: number;
@@ -181,6 +182,15 @@ export interface components {
         ScoreRequest: {
             url: string;
         };
+        CompanySourceSubmission: {
+            urls: string[];
+        };
+        SourceSubmissionResponse: {
+            message: string;
+            verified_count: number;
+            pending_count: number;
+            status: "processing" | "queued";
+        };
     };
 }
 
@@ -193,3 +203,4 @@ export type ScoreResponse = components["schemas"]["ScoreResponse"];
 export type ScoreListResponse = components["schemas"]["ScoreListResponse"];
 export type ScoringStatusResponse = components["schemas"]["ScoringStatusResponse"];
 export type ScoreRequest = components["schemas"]["ScoreRequest"];
+export type SourceSubmissionResponse = components["schemas"]["SourceSubmissionResponse"];

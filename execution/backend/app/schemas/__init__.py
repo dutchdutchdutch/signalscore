@@ -7,6 +7,12 @@ from app.schemas.company import (
     CompanyUpdate,
     CompanyList,
 )
+from app.schemas.source import (
+    CompanySourceBase,
+    CompanySourceCreate,
+    CompanySourceRead,
+    CompanySourceSubmission,
+)
 
 __all__ = [
     "CompanyBase",
@@ -14,4 +20,8 @@ __all__ = [
     "CompanyRead",
     "CompanyUpdate",
     "CompanyList",
+    "CompanySourceBase",
+    "CompanySourceCreate",
+    "CompanySourceRead",
+    "CompanySourceSubmission",
 ]

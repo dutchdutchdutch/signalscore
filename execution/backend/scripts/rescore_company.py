@@ -66,7 +66,7 @@ def save_source(db, company: Company, url: str, source_type: SourceType = Source
             CompanySource.company_id == company.id,
             CompanySource.url == url
         )
-    ).scalar_one_or_none()
+    ).scalars().first()
     
     if not existing:
         new_source = CompanySource(

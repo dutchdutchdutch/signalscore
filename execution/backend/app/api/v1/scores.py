@@ -88,6 +88,7 @@ async def list_scores(db: Session = Depends(get_db)) -> ScoreListResponse:
             continue
         latest_score = company.scores[0] # Ordered by desc in model
         db_responses.append(ScoreResponse(
+            company_id=company.id,
             company_name=company.name,
             careers_url=company.careers_url,
             score=round(latest_score.score, 1),
@@ -145,6 +146,7 @@ async def get_score(company_name: str, db: Session = Depends(get_db)) -> ScoreRe
     if company and company.scores:
         latest_score = company.scores[0] # Ordered by desc created_at
         return ScoreResponse(
+            company_id=company.id,
             company_name=company.name,
             careers_url=company.careers_url,
             score=round(latest_score.score, 1),

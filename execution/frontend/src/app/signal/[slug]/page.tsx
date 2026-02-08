@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Footer } from '@/components/ui/Footer';
 import { ScoreDisplay, categoryColors } from '@/components/ui/ScoreDisplay';
+import { UrlSubmissionForm } from '@/components/features/UrlSubmissionForm';
 import { scoresApi, ApiError } from '@/lib/api-client';
 import type { ScoreResponse } from '@/lib/api-client/schema';
 
@@ -152,34 +153,35 @@ function NotFoundState() {
 
 export default function SignalDetailPage({ params }: { params: { slug: string } }) {
   const [score, setScore] = useState<ScoreResponse | null>(null);
+  const [showSubmission, setShowSubmission] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Convert slug to domain (www-stripe-com -> www.stripe.com)
   const domain = params.slug.replace(/-/g, '.');
 
-  useEffect(() => {
-    async function fetchScore() {
-      try {
-        setLoading(true);
-        // Clean up domain if user manually removed www- or similar edge cases
-        // But mainly rely on the backend finding it by name/domain
-        const data = await scoresApi.get(domain);
-        setScore(data);
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 404) {
-          setError('not_found');
-        } else {
-          setError('error');
-          console.error(err);
-        }
-      } finally {
-        setLoading(false);
+  async function fetchScore(showLoading = true) {
+    try {
+      if (showLoading) setLoading(true);
+      // Clean up domain if user manually removed www- or similar edge cases
+      // But mainly rely on the backend finding it by name/domain
+      const data = await scoresApi.get(domain);
+      setScore(data);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        setError('not_found');
+      } else {
+        setError('error');
+        console.error(err);
       }
+    } finally {
+      if (showLoading) setLoading(false);
     }
+  }
 
+  useEffect(() => {
     if (domain) {
-      fetchScore();
+      fetchScore(true);
     }
   }, [domain]);
 
@@ -243,6 +245,12 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
                 </span>
               )}
             </div>
+            <button
+              className="improve-score-cta"
+              onClick={() => setShowSubmission(!showSubmission)}
+            >
+              Improve Score <span className="arrow">↑</span>
+            </button>
           </div>
           {score.signals.marketing_only && (
             <div className="marketing-warning">
@@ -281,12 +289,21 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
           </section>
         )}
 
+        {/* Story 5-7: User URL Submission */}
+        {score.company_id && showSubmission && (
+          <section className="submission-section">
+            <UrlSubmissionForm
+              companyId={score.company_id}
+              companyName={score.company_name}
+              onSuccess={() => fetchScore(false)}
+            />
+          </section>
+        )}
+
         {/* Category Breakdown */}
         <section className="breakdown-section">
-          <h2>Category Breakdown</h2>
-          <div className="disclaimer">
-            Scores derive from public data: job postings, blog posts, public repos, news. Internal reality may differ.
-          </div>
+          <h2>Score Breakdown</h2>
+
 
           <div className="table-container">
             <table className="breakdown-table">
@@ -368,11 +385,14 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
               </tbody>
             </table>
           </div>
+          <div className="disclaimer">
+            Scores derive from public data: job postings, blog posts, public repos, news. Internal reality may differ.
+          </div>
         </section>
 
         {/* Reference Scale */}
         <section className="scale-section">
-          <h2>Signal Score Reference</h2>
+          <h2>Score Reference</h2>
           <div className="scale-list">
             {SIGNAL_SCALE.map((item) => (
               <div key={item.level} className="scale-item">
@@ -415,6 +435,10 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
           align-items: center;
           gap: 40px;
           margin-bottom: 40px;
+          position: relative; /* For absolute positioning of CTA */
+        }
+        .company-details {
+          flex: 1; /* Allow details to take available space */
         }
         .company-details h1 {
           font-size: 32px;
@@ -427,9 +451,39 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
           font-family: var(--font-mono);
           font-size: 14px;
         }
+        
+        .improve-score-cta {
+          position: absolute;
+          top: 40px;
+          right: 40px;
+          background: transparent;
+          border: 1px solid var(--color-border); /* Subtle border */
+          color: var(--color-text-secondary);
+          padding: 6px 12px;
+          border-radius: 6px;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          z-index: 10;
+        }
+        .improve-score-cta:hover {
+          color: var(--color-text-primary);
+          border-color: var(--color-text-primary);
+          background: transparent;
+        }
+        .arrow {
+          font-size: 14px;
+        }
+        
+
 
         /* Sources */
         .sources-section { margin-bottom: 40px; }
+        .submission-section { margin-bottom: 40px; }
         .sources-grid {
           display: grid;
           grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -667,7 +721,7 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
           color: var(--color-text-secondary);
         }
 
-        @media (max-width: 640px) {
+@media (max-width: 640px) {
           .hero-section {
             flex-direction: column;
             text-align: center;
@@ -678,6 +732,17 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
             align-items: flex-start;
             gap: 8px;
           }
+        }
+
+        .breakdown-section h2,
+        .scale-section h2 {
+          text-align: left;
+          font-size: 13px;
+          color: var(--color-text-secondary);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 6px;
+          font-weight: 600;
         }
       `}</style>
     </div>

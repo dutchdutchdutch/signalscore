@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import or_, func
 from sqlalchemy.orm import Session
 
-from app.models import Company
+from app.models import Company, CompanySource
 from app.schemas import CompanyCreate, CompanyUpdate
 
 
@@ -116,3 +116,60 @@ class CompanyRepository:
     def count(self) -> int:
         """Get total company count."""
         return self.db.query(Company).count()
+
+    # Story 5-7: Source Management
+    def get_source_by_url(self, company_id: int, url: str) -> Optional[CompanySource]:
+        """Get existing source for company."""
+        # Avoid circular import
+        from app.models import CompanySource
+        return (
+            self.db.query(CompanySource)
+            .filter(CompanySource.company_id == company_id, CompanySource.url == url)
+            .first()
+        )
+
+    def add_source(
+        self, 
+        company_id: int, 
+        url: str, 
+        verification_status: str,
+        submitted_by: Optional[str] = None
+    ) -> CompanySource:
+        """Add a new source to the company."""
+        from app.models import CompanySource
+        from app.models.enums import SourceType
+        
+        source = CompanySource(
+            company_id=company_id,
+            url=url,
+            source_type=SourceType.OTHER, # Default to OTHER, discovery agent can refine
+            verification_status=verification_status,
+            submitted_by=submitted_by,
+            is_active=True
+        )
+        self.db.add(source)
+        self.db.commit()
+        self.db.refresh(source)
+        return source
+
+    def count_recent_pending_sources(self, company_id: int, hours: int = 1) -> int:
+        """Count pending sources submitted in the last N hours."""
+        from app.models import CompanySource
+        from app.models.enums import VerificationStatus
+        from datetime import datetime, timedelta, timezone
+
+        # Approximate 'created_at' using 'last_scraped_at' which defaults to now() on creation
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        
+        return (
+            self.db.query(CompanySource)
+            .filter(
+                CompanySource.company_id == company_id,
+                CompanySource.verification_status == VerificationStatus.PENDING,
+                # Note: last_scraped_at is timezone aware if DB is configured right, 
+                # but careful with SQLite naive datetimes. 
+                # Assuming standard UTC or naive-as-UTC storage.
+                CompanySource.last_scraped_at >= cutoff 
+            )
+            .count()
+        )

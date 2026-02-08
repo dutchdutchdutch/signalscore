@@ -16,3 +16,9 @@ class SourceType(str, Enum):
     GITHUB = "github"
     NEWS = "news"
     OTHER = "other"
+
+
+class VerificationStatus(str, Enum):
+    VERIFIED = "verified"
+    PENDING = "pending"
+    REJECTED = "rejected"
