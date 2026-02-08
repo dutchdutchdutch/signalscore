@@ -15,6 +15,8 @@ The system scrapes publicly available data—careers pages, engineering blogs, G
 
 The goal is to provide transparency into which companies are actively building with modern AI tools versus those that may be falling behind in the agentic transformation. The system employs **autonomous discovery agents** to finding, scanning, and synthesizing signals from multiple verified sources, not just the homepage.
 
+The [Methodology Article](docs/articles/scoring-methodology.md) provides more details about the WHAT, WHY, and HOW.
+
 ## Architecture
 
 The project follows a decoupled full-stack architecture:
@@ -87,7 +89,6 @@ A company typically scores **80+** (Leading) when it demonstrates:
 - **30+** AI/ML keywords across careers and blog content
 - Evidence of **agentic/autonomous systems** (workflows, orchestration, self-healing)
 - Use of **5+ modern AI tools** (LangChain, PyTorch, SageMaker, etc.)
-- A **dedicated AI Platform or Strategy team**
 - A **dedicated AI Platform or Strategy team**
 - AI adoption in **non-engineering functions** (e.g., "AI in Marketing")
 - Presence of dedicated **AI/Engineering subdomains** (e.g., `ai.company.com`, `research.company.com`)
