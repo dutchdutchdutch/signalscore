@@ -32,7 +32,16 @@ ENV/
 htmlcov/
 .env
 
+# Temp/debug files
+tmp_tests/
+tmp-tests/
+check_*.py
+check_*.txt
+monitor_*.py
+curl_output*.txt
+fix_*_out.txt
+debug_*.txt
+uvicorn_output.txt
+
 # BMAD Agent
-.agent/skills/*/.git
-.agent/memory
-.agent/work
+.agent/

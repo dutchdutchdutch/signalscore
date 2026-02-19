@@ -138,6 +138,7 @@ export interface components {
             agentic_signals: number;
             tool_stack: string[];
             non_eng_ai_roles: number;
+            ai_in_it_signals: number;
             has_ai_platform_team: boolean;
             jobs_analyzed: number;
             marketing_only: boolean;
@@ -149,7 +150,7 @@ export interface components {
             agentic_signals: number;
             tool_stack: number;
             non_eng_ai: number;
-            ai_platform_team: number;
+            ai_in_it: number;
         };
         SourceResponse: {
             url: string;

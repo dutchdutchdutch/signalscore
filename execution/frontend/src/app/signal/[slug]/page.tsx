@@ -11,17 +11,17 @@ import type { ScoreResponse } from '@/lib/api-client/schema';
 // --- Constants & Reference Data ---
 
 const WEIGHTS: Record<string, number> = {
-  ai_keywords: 0.25,
+  ai_keywords: 0.10,
   agentic_signals: 0.20,
   tool_stack: 0.20,
-  non_eng_ai: 0.25,
-  ai_platform_team: 0.10,
+  non_eng_ai: 0.40,
+  ai_in_it: 0.10,
 };
 
 const CATEGORY_INFO = {
   ai_keywords: {
     label: 'AI Keywords',
-    description: 'Volume and relevance of AI terms in job listings.'
+    description: 'AI plans and success evidence from website, news, investor relations, and press releases.'
   },
   agentic_signals: {
     label: 'Agentic Signals',
@@ -35,9 +35,9 @@ const CATEGORY_INFO = {
     label: 'AI in Non-Engineering Roles',
     description: 'Presence of AI-focused roles outside of engineering (Product, Design, Ethics).'
   },
-  ai_platform_team: {
-    label: 'AI Platform Team',
-    description: 'Dedicated infrastructure teams building internal AI platforms.'
+  ai_in_it: {
+    label: 'AI in IT',
+    description: 'AI adoption in engineering: platform teams, engineering job descriptions, and engineering blogs.'
   }
 };
 
@@ -318,7 +318,16 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(score.component_scores).map(([key, value]) => {
+                {(() => {
+                  // Normalize legacy keys, then iterate in weight order (high to low)
+                  const normalized: Record<string, number> = {};
+                  for (const [k, v] of Object.entries(score.component_scores)) {
+                    const nk = k === 'ai_platform_team' ? 'ai_in_it' : k;
+                    normalized[nk] = v;
+                  }
+                  const CATEGORY_ORDER = ['non_eng_ai', 'agentic_signals', 'tool_stack', 'ai_in_it', 'ai_keywords'];
+                  return CATEGORY_ORDER.filter(k => k in normalized).map(key => {
+                  const value = normalized[key] ?? 0;
                   const info = CATEGORY_INFO[key as keyof typeof CATEGORY_INFO] || { label: key, description: '' };
                   const weight = WEIGHTS[key] || 0;
                   const contribution = value * weight;
@@ -381,7 +390,8 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
                       </td>
                     </tr>
                   );
-                })}
+                });
+                })()}
               </tbody>
             </table>
           </div>

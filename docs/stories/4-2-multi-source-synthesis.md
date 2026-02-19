@@ -16,9 +16,10 @@ In Story 4.1, we implemented the "Deep Discovery" agent which now finds and scra
 
 1.  **AC1: Weighted Signal Aggregation**
     -   Define reliability weights for different source types per component:
-        -   **Tool Stack:** GitHub (High), Engineering Blog (Medium), Homepage (Low).
-        -   **AI Strategy:** Investor Relations/Press (High), Homepage (Medium).
-        -   **Agentic Usage:** Job Descriptions (High), Engineering Blog (High).
+        -   **Tool Stack:** GitHub (High), Engineering Blog (Medium), Homepage (Low). AI/ML engineering roles listing ai related tool stack
+        -   **AI Strategy:** Investor Relations/Press (High), Homepage, working at, about us, press releases (Medium). AI/ML company listing ai strategy
+        -   **Agentic Usage within engineering:** Job Descriptions (High), Engineering Blog (High). AI/ML engineering roles listing ai related tool stack
+        -  **Agentic Usage outside of engineering:** Job description for middle management roles like product, marketing and legal Lead and director roles (very high), conference and speaking engagements about this topic (High).
     -   Algorithm should prioritize high-confidence sources when signals conflict.
 
 2.  **AC2: Source Attribution**
@@ -26,7 +27,7 @@ In Story 4.1, we implemented the "Deep Discovery" agent which now finds and scra
     -   Example: "Tool Stack: LangChain (Found in GitHub)", "Role: AI Product Manager (Found in Careers Page)".
 
 3.  **AC3: Conflict Resolution**
-    -   If Homepage says "We use AI" but GitHub shows 0 AI activity/repos, lower the "Implementation" score or flag as "Marketing Only".
+    -   If Homepage says "We use AI" but public Github contributions shows 0 AI activity/repos, lower the "Implementation" score or flag as "Marketing Only". it is likely an AI consumer of generic platforms. 
     -   (MVP: Simple weighted average or priority override is fine).
 
 4.  **AC4: Confidence Score Refinement**

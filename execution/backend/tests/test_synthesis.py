@@ -163,13 +163,90 @@ def test_subdomain_boost():
     and contribute significantly to the score.
     """
     service = ScoringService(db=MagicMock())
-    
+
     text = {
         "homepage": "Generic marketing content.",
         "subdomain_ai": "Our AI Research team uses TensorFlow and JAX."
     }
     signals = service._extract_signals_heuristically(text)
-    
+
     assert "tensorflow" in signals.tool_stack
     # Weight for subdomain_ai is 2.0
     assert signals.weighted_tool_count >= 2.0
+
+
+def test_tiered_keyword_success_evidence():
+    """Success-tier keywords should score higher than generic mentions."""
+    service = ScoringService(db=MagicMock())
+
+    # Company A: Generic AI mentions only
+    signals_generic = service._extract_signals_heuristically({
+        "homepage": "We use artificial intelligence and machine learning."
+    })
+
+    # Company B: Concrete AI success evidence
+    signals_success = service._extract_signals_heuristically({
+        "homepage": "Our AI-powered recommendation engine deployed ai in production. We launched AI features."
+    })
+
+    assert signals_success.ai_success_points > 0
+    assert signals_success.ai_keywords >= signals_generic.ai_keywords
+
+
+def test_tiered_keyword_plan_evidence():
+    """Plan/strategy keywords should score at medium tier."""
+    service = ScoringService(db=MagicMock())
+
+    signals = service._extract_signals_heuristically({
+        "investor_relations": "Our AI strategy includes investing in generative AI. We appointed a Chief AI Officer to lead our AI transformation."
+    })
+
+    assert signals.ai_plan_points > 0
+    assert signals.ai_generic_points > 0  # "generative ai" also matches generic tier
+    # "ai strategy" (2) + "ai transformation" (2) + "chief ai officer" (2) = 6,
+    # discounted by 0.7 recency multiplier (IR source, no date) → int(6*0.7) = 4
+    assert signals.ai_plan_points >= 4
+
+
+def test_news_source_tracking():
+    """News sources should be counted in SignalData."""
+    service = ScoringService(db=MagicMock())
+
+    signals = service._extract_signals_heuristically({
+        "homepage": "Generic homepage.",
+        "news_article": "Company launches AI product.",
+        "press_release": "Company announces AI partnership.",
+        "investor_relations": "Q4 earnings: AI revenue grew 40%.",
+    })
+
+    assert signals.news_sources_found == 3
+
+
+def test_ir_clears_marketing_flag():
+    """AI keywords in IR content should prevent marketing_only flag."""
+    service = ScoringService(db=MagicMock())
+
+    signals = service._extract_signals_heuristically({
+        "homepage": "We use AI AI AI AI AI AI company using AI everywhere. Machine Learning Deep Learning.",
+        "investor_relations": "Our AI strategy is central to our growth. Machine learning drives efficiency."
+    })
+
+    # IR content should prevent marketing_only even without eng sources
+    assert signals.marketing_only is False
+
+
+def test_recency_multiplier():
+    """Old news content should be discounted via recency multiplier."""
+    from app.services.scoring_service import _estimate_recency_multiplier
+
+    # Recent date should get full credit
+    recent = _estimate_recency_multiplier("Published January 15, 2026. Company launches AI product.")
+    assert recent == 1.0
+
+    # Very old date should get zero
+    old = _estimate_recency_multiplier("Published January 15, 2020. Company launches AI product.")
+    assert old == 0.0
+
+    # No date should get fallback
+    no_date = _estimate_recency_multiplier("Company launches AI product.")
+    assert no_date == 0.7

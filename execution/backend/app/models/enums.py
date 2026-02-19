@@ -15,6 +15,9 @@ class SourceType(str, Enum):
     BLOG = "blog"
     GITHUB = "github"
     NEWS = "news"
+    PRESS_RELEASE = "press_release"
+    INVESTOR_RELATIONS = "investor_relations"
+    NEWSROOM = "newsroom"
     OTHER = "other"
 
 

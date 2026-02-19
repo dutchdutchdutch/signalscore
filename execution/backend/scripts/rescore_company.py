@@ -17,6 +17,7 @@ from app.services.discovery_service import DiscoveryService
 from app.core.database import SessionLocal
 from app.models.company import Company, Score, CompanySource
 from app.models.enums import SourceType
+from app.services.scoring.calculator import SignalData, ScoreCalculator
 from sqlalchemy import select
 
 async def scrape_urls(urls: List[str]) -> dict:
@@ -200,6 +201,78 @@ async def evidence_mode(company_name: str, main_url: str, evidence_urls: List[st
     finally:
         db.close()
 
+async def rescore_only_mode(company_name: str):
+    """Rescore-only mode: Recalculate from stored signals with current weights (no scraping)."""
+    print(f"🔄 RESCORE-ONLY MODE: Recalculating {company_name} with updated weights")
+
+    db = SessionLocal()
+    try:
+        stmt = select(Company).where(Company.name == company_name)
+        company = db.execute(stmt).scalar_one_or_none()
+
+        if not company or not company.scores:
+            print(f"  ❌ No existing scores found for {company_name}")
+            return
+
+        # Get latest score
+        latest_score = company.scores[0]  # ordered desc by created_at
+        stored_signals = latest_score.signals
+
+        print(f"  Using signals from Score #{latest_score.id} ({latest_score.created_at})")
+        print(f"  Old score: {latest_score.score} ({latest_score.category.value})")
+
+        # Reconstruct SignalData from stored JSON
+        signals = SignalData(
+            ai_keywords=stored_signals.get("ai_keywords", 0),
+            agentic_signals=stored_signals.get("agentic_signals", 0),
+            tool_stack=stored_signals.get("tool_stack", []),
+            non_eng_ai_roles=stored_signals.get("non_eng_ai_roles", 0),
+            ai_in_it_signals=stored_signals.get("ai_in_it_signals", 0),
+            has_ai_platform_team=stored_signals.get("has_ai_platform_team", False),
+            jobs_analyzed=stored_signals.get("jobs_analyzed", 0),
+            source_attribution=stored_signals.get("source_attribution", {}),
+            marketing_only=stored_signals.get("marketing_only", False),
+            weighted_tool_count=stored_signals.get("weighted_tool_count", 0.0),
+            confidence_score=stored_signals.get("confidence_score", 0.5),
+            ai_success_points=stored_signals.get("ai_success_points", 0),
+            ai_plan_points=stored_signals.get("ai_plan_points", 0),
+            ai_generic_points=stored_signals.get("ai_generic_points", 0),
+            news_sources_found=stored_signals.get("news_sources_found", 0),
+            ai_job_total=stored_signals.get("ai_job_penetration", {}).get("total", 0),
+            ai_job_hits=stored_signals.get("ai_job_penetration", {}).get("ai_hits", 0),
+        )
+
+        # Recalculate with current weights
+        calculator = ScoreCalculator()
+        score_result = calculator.calculate(company_name, signals)
+
+        print(f"\n📊 Rescored Result:")
+        print(f"  New Score: {score_result.score} (was {latest_score.score})")
+        print(f"  New Category: {score_result.category_label} (was {latest_score.category.value})")
+
+        print(f"\n🧩 Component Scores:")
+        old_components = latest_score.component_scores or {}
+        for k, v in score_result.component_scores.items():
+            old_v = old_components.get(k, "N/A")
+            print(f"  - {k}: {v} (was {old_v})")
+
+        # Save new score
+        new_score = Score(
+            company_id=company.id,
+            score=score_result.score,
+            category=score_result.category,
+            signals=score_result.signals.to_dict(),
+            component_scores=score_result.component_scores,
+            evidence=score_result.evidence + ["Rescored with updated weights"]
+        )
+        db.add(new_score)
+        db.commit()
+        print(f"\n  ✅ New score saved (Score #{new_score.id})")
+
+    finally:
+        db.close()
+
+
 async def standard_mode(company_name: str, url: str):
     """Standard mode: Trigger standard scoring logic."""
     print(f"🔄 STANDARD MODE: Scoring {company_name} via standard service pipeline")
@@ -226,20 +299,30 @@ async def standard_mode(company_name: str, url: str):
 async def main():
     parser = argparse.ArgumentParser(description="SignalScore Rescoring Tool")
     parser.add_argument("--company", required=True, help="Company Name")
-    parser.add_argument("--url", required=True, help="Main Careers URL")
+    parser.add_argument("--url", help="Main Careers URL (not required for --rescore-only)")
     parser.add_argument("--evidence", nargs="*", help="List of specific evidence URLs")
     parser.add_argument("--research", action="store_true", help="Automatically research company blogs/github")
     parser.add_argument("--debug", action="store_true", help="Run in debug mode (no save)")
-    
+    parser.add_argument("--rescore-only", action="store_true", help="Recalculate from stored signals with current weights (no scraping)")
+
     args = parser.parse_args()
-    
-    if args.debug:
+
+    if args.rescore_only:
+        await rescore_only_mode(args.company)
+    elif args.debug:
+        if not args.url:
+            parser.error("--url is required for debug mode")
         await debug_mode(args.company, args.url)
-    elif args.evidence is not None or args.research: 
+    elif args.evidence is not None or args.research:
         # Trigger evidence mode if evidence provided OR research requested
+        if not args.url:
+            parser.error("--url is required for evidence/research mode")
         evidence = args.evidence if args.evidence else []
         await evidence_mode(args.company, args.url, evidence, args.research)
     else:
+        if not args.url:
+            parser.error("--url is required (use --rescore-only to recalculate from stored signals)")
+
         # Check if company has saved sources -> redirect to evidence mode automatically
         db = SessionLocal()
         try:

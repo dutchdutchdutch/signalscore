@@ -23,6 +23,16 @@ from app.schemas.scores import (
 )
 from fastapi.responses import JSONResponse # Added
 
+def _normalize_component_scores(raw: dict) -> dict:
+    """Normalize legacy component score keys from DB data."""
+    normalized = dict(raw)
+    if 'ai_platform_team' in normalized and 'ai_in_it' not in normalized:
+        normalized['ai_in_it'] = normalized.pop('ai_platform_team')
+    elif 'ai_platform_team' in normalized:
+        normalized.pop('ai_platform_team')
+    return normalized
+
+
 router = APIRouter(prefix="/scores", tags=["scores"])
 
 
@@ -95,7 +105,7 @@ async def list_scores(db: Session = Depends(get_db)) -> ScoreListResponse:
             category=latest_score.category.value,
             category_label=latest_score.category.value.replace("_", "-").title(),
             signals=SignalResponse(**latest_score.signals),
-            component_scores=ComponentScoresResponse(**latest_score.component_scores),
+            component_scores=ComponentScoresResponse(**_normalize_component_scores(latest_score.component_scores)),
             evidence=latest_score.evidence,
             scored_at=latest_score.created_at
         ))
@@ -153,7 +163,7 @@ async def get_score(company_name: str, db: Session = Depends(get_db)) -> ScoreRe
             category=latest_score.category.value,
             category_label=latest_score.category.value.replace("_", "-").title(),
             signals=SignalResponse(**latest_score.signals),
-            component_scores=ComponentScoresResponse(**latest_score.component_scores),
+            component_scores=ComponentScoresResponse(**_normalize_component_scores(latest_score.component_scores)),
             evidence=latest_score.evidence,
             scored_at=latest_score.created_at
         )

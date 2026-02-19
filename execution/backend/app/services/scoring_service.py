@@ -22,6 +22,121 @@ from typing import Dict
 from urllib.parse import urljoin, urlparse
 import tldextract
 
+# Tiered AI keyword lists for quality-weighted analysis
+AI_KEYWORD_TIERS = {
+    "success": {
+        # Evidence of AI actually deployed/working (high value)
+        "terms": [
+            "ai-powered", "ai powered", "ml-driven", "ml driven",
+            "ai deployment", "deployed ai", "ai in production",
+            "production model", "model serving", "inference pipeline",
+            "ai revenue", "ai-generated revenue",
+            "automated with ai", "automated with ml",
+            "ai transformation results", "roi from ai",
+            "ai patent",
+        ],
+        "regexes": [
+            r'\b\d+%.*(?:automat|efficien|improv|reduc).*\b(?:ai|ml)\b',
+            r'\b(?:ai|ml)\b.*\b\d+%.*(?:automat|efficien|improv|reduc)',
+            r'\b(?:launch|ship|deploy|release)(?:ed|ing)?\b.*\b(?:ai|ml)\b',
+        ],
+        "points_per_match": 3,
+    },
+    "plan": {
+        # Evidence of AI strategy/investment/roadmap (medium value)
+        "terms": [
+            "ai strategy", "ai roadmap", "ai investment",
+            "ai initiative", "ai transformation",
+            "ai first", "ai-first",
+            "chief ai officer", "head of ai", "vp of ai",
+            "ai budget", "investing in ai", "ai partnership",
+            "ai center of excellence", "ai coe",
+            "ai governance", "responsible ai",
+            "generative ai strategy", "genai strategy",
+            "ai adoption", "ai maturity",
+        ],
+        "regexes": [
+            r'\b(?:invest|commit|allocat|dedicat)(?:ed|ing|s)?\b.*\$?\d+.*\b(?:ai|ml|artificial intelligence)\b',
+            r'\b(?:ai|ml)\b.*\b(?:pilot|poc|proof of concept|prototype)\b',
+        ],
+        "points_per_match": 2,
+    },
+    "generic": {
+        # Generic AI mentions (baseline — current behavior)
+        "terms": [
+            "artificial intelligence", "machine learning", "deep learning",
+            "nlp", "computer vision", "generative ai", "llm",
+            "data science", "experimentation", "data platform",
+            "ml platform", "ai agent",
+        ],
+        "regexes": [
+            r'\bai\b',
+            r'\bml\b',
+        ],
+        "points_per_match": 1,
+    },
+}
+
+# Source types that are news/press/IR (subject to recency weighting)
+NEWS_SOURCE_TYPES = {"news_article", "press_release", "investor_relations", "newsroom"}
+
+_DATE_PATTERNS = [
+    r'(\w+ \d{1,2},? \d{4})',
+    r'(\d{4}-\d{2}-\d{2})',
+    r'(\d{1,2}/\d{1,2}/\d{4})',
+    r'(\d{1,2} \w+ \d{4})',
+]
+_DATE_FORMATS = [
+    "%B %d, %Y", "%B %d %Y", "%b %d, %Y", "%b %d %Y",
+    "%Y-%m-%d",
+    "%m/%d/%Y",
+    "%d %B %Y", "%d %b %Y",
+]
+
+
+def _estimate_recency_multiplier(text: str) -> float:
+    """
+    Best-effort date extraction from article text.
+    Returns 1.0 for <=45 days, 0.5 for 45-90 days, 0.0 for >90 days.
+    Falls back to 0.7 if no date found.
+    """
+    now = datetime.now()
+    found_dates = []
+    for pattern in _DATE_PATTERNS:
+        matches = re.findall(pattern, text)
+        for m in matches:
+            for fmt in _DATE_FORMATS:
+                try:
+                    d = datetime.strptime(m.strip(), fmt)
+                    if d.year >= 2020:
+                        found_dates.append(d)
+                except ValueError:
+                    continue
+
+    if not found_dates:
+        return 0.7
+
+    most_recent = max(found_dates)
+    days_old = (now - most_recent).days
+
+    if days_old <= 45:
+        return 1.0
+    elif days_old <= 90:
+        return 0.5
+    else:
+        return 0.0
+
+
+def _normalize_component_scores(raw: dict) -> dict:
+    """Normalize legacy component score keys from DB data."""
+    normalized = dict(raw)
+    if 'ai_platform_team' in normalized and 'ai_in_it' not in normalized:
+        normalized['ai_in_it'] = normalized.pop('ai_platform_team')
+    elif 'ai_platform_team' in normalized:
+        normalized.pop('ai_platform_team')
+    return normalized
+
+
 class ScoringService:
     def __init__(self, db: Session):
         self.db = db
@@ -48,7 +163,7 @@ class ScoringService:
     async def get_latest_score(self, url: str) -> Optional[ScoreResponse]:
         """Check if we have a recent score for this URL."""
         # 1. Parse domain using tldextract for robust matching
-        extracted = tldextract.extract(url)
+        extracted = await asyncio.to_thread(tldextract.extract, url)
         root_domain = f"{extracted.domain}.{extracted.suffix}"
         
         # Robust Domain Matching
@@ -75,7 +190,7 @@ class ScoringService:
                     category=latest_score.category.value,
                     category_label=get_category_label(latest_score.category),
                     signals=SignalResponse(**latest_score.signals),
-                    component_scores=ComponentScoresResponse(**latest_score.component_scores),
+                    component_scores=ComponentScoresResponse(**_normalize_component_scores(latest_score.component_scores)),
                     evidence=latest_score.evidence,
                     sources=[{"url": s.url, "source_type": s.source_type} for s in company.sources],
                     scored_at=latest_score.created_at
@@ -87,12 +202,11 @@ class ScoringService:
         Background Task: Score a company.
         Persistence-only, no return value expected by API caller.
         """
-        print(f"Starting background scoring for {url}")
-        
         # 1. Parse domain/name using tldextract
         # This handles subdomains (xyz.google.com -> google.com) and paths (google.com/jobs -> google.com)
         # and complex TLDs (yahoo.co.uk -> yahoo.co.uk)
-        extracted = tldextract.extract(url)
+        # Run blocking tldextract in thread (it may fetch updates)
+        extracted = await asyncio.to_thread(tldextract.extract, url)
         # Reconstruct the root domain (domain + suffix)
         root_domain = f"{extracted.domain}.{extracted.suffix}"
         
@@ -120,7 +234,8 @@ class ScoringService:
         
         discovery = DiscoveryService()
         log_trace("DiscoveryService: Finding sources")
-        discovered_sources = discovery.find_sources(company_name, root_domain)
+        # Run synchronous blocking search in a separate thread
+        discovered_sources = await asyncio.to_thread(discovery.find_sources, company_name, root_domain)
         log_trace("DiscoveryService Results", {"count": len(discovered_sources), "sources": [s['url'] for s in discovered_sources]})
         print(f"Discovered {len(discovered_sources)} potential sources: {[s['url'] for s in discovered_sources]}")
 
@@ -244,12 +359,19 @@ class ScoringService:
                             else:
                                 text_segments["job_posting"] = dr.extracted_text
             
+            # 5b. AI Job Penetration Scan — count % of job links mentioning AI/agent
+            ai_job_total, ai_job_hits = self.scan_ai_job_penetration(
+                scrape_result.raw_html if scrape_result.success else ""
+            )
+            if ai_job_total > 0:
+                pct = round(ai_job_hits / ai_job_total * 100, 1)
+                print(f"AI Job Penetration: {ai_job_hits}/{ai_job_total} ({pct}%) job links mention AI/agent")
+
             # 6. Extract & Calculate
             signals = self._extract_signals_heuristically(text_segments)
-            
-            # Adjust jobs_analyzed (already handled inside logic but we can double check)
-            # signals.jobs_analyzed = len(text_segments)
-            
+            signals.ai_job_total = ai_job_total
+            signals.ai_job_hits = ai_job_hits
+
             score_result = self.calculator.calculate(company_name, signals)
             
             score_data = {
@@ -300,7 +422,12 @@ class ScoringService:
                 print(f"Successfully scored {company_name}")
 
         except Exception as e:
-            print(f"Error in background scoring task for {url}: {e}")
+            print(f"Error in background scoring task for {url}: {e}", flush=True)
+            try:
+                with open("debug_scoring.txt", "a") as f:
+                    f.write(f"Error for {url}: {e}\n")
+            except:
+                pass
 
 
     def _get_or_create_company(self, name: str, domain: str, url: str) -> Company:
@@ -372,29 +499,61 @@ class ScoringService:
             "non_eng_ai_roles": []
         }
         
-        total_keywords = 0
+        eng_keyword_sources = {"github", "engineering_blog", "job_posting", "job_posting_verified", "ats_link", "careers_fallback"}
+        non_eng_keywords = 0
+        eng_ai_keywords = 0
+        ai_success_points = 0
+        ai_plan_points = 0
+        ai_generic_points = 0
         tools_found = set()
         agentic_count = 0
         non_eng_score = 0
         has_platform_team = False
-        
+
         # Helper to analyze a segment
         def analyze_segment(source_type: str, text: str):
-            nonlocal total_keywords, agentic_count, non_eng_score, has_platform_team
+            nonlocal non_eng_keywords, eng_ai_keywords, agentic_count, non_eng_score, has_platform_team
+            nonlocal ai_success_points, ai_plan_points, ai_generic_points
             text_lower = text.lower()
-            
-            # 1. AI Keywords
-            ai_terms = ["artificial intelligence", "machine learning", "deep learning", "nlp", "computer vision", "generative ai", "llm", "data science", "experimentation", "data platform", "ml platform", "ai agent"]
-            k_count = sum(text_lower.count(term) for term in ai_terms)
-            
-            # Short forms
-            ai_regex = len(re.findall(r'\bai\b', text_lower))
-            ml_regex = len(re.findall(r'\bml\b', text_lower))
-            
-            segment_keywords = k_count + ai_regex + ml_regex
-            total_keywords += segment_keywords
+
+            # 1. AI Keywords — Tiered Analysis
+            seg_success = 0
+            seg_plan = 0
+            seg_generic = 0
+
+            for tier_name, tier_config in AI_KEYWORD_TIERS.items():
+                term_count = sum(text_lower.count(term) for term in tier_config["terms"])
+                regex_count = sum(len(re.findall(pat, text_lower)) for pat in tier_config.get("regexes", []))
+                tier_points = (term_count + regex_count) * tier_config["points_per_match"]
+
+                if tier_name == "success":
+                    seg_success += tier_points
+                elif tier_name == "plan":
+                    seg_plan += tier_points
+                else:
+                    seg_generic += tier_points
+
+            # Recency multiplier for news-type sources
+            if source_type in NEWS_SOURCE_TYPES:
+                multiplier = _estimate_recency_multiplier(text_lower)
+                seg_success = int(seg_success * multiplier)
+                seg_plan = int(seg_plan * multiplier)
+                seg_generic = int(seg_generic * multiplier)
+
+            segment_keywords = seg_success + seg_plan + seg_generic
             if segment_keywords > 0:
                 sources_map["ai_keywords"].append(source_type)
+
+            # Route keywords to engineering or non-engineering bucket
+            if source_type in eng_keyword_sources:
+                eng_ai_keywords += segment_keywords
+            else:
+                non_eng_keywords += segment_keywords
+
+            # Accumulate tier totals
+            ai_success_points += seg_success
+            ai_plan_points += seg_plan
+            ai_generic_points += seg_generic
                 
             # 2. Tool Stack with Weights (AC1)
             known_tools = ["pytorch", "tensorflow", "kubernetes", "aws", "gcp", "azure", "databricks", "snowflake", "openai", "anthropic", "langchain", "huggingface", "claude", "github", "copilot", "cursor", "v0", "replit"]
@@ -419,8 +578,15 @@ class ScoringService:
             # 4.2 Requirement: "Agentic Usage within engineering: Job Descriptions (High), Engineering Blog (High)"
             segment_agentic = sum(text_lower.count(t) for t in ["agent", "autonomous", "chaos monkey", "spinnaker", "self-healing", "chaos engineering"])
             
-            # Boost if context implies orchestration
-            if any(t in text_lower for t in ["langchain", "autogen", "agentic", "orchestration"]):
+            # Boost if context implies orchestration or AI-friendly documentation
+            if any(t in text_lower for t in [
+                "langchain", "autogen", "agentic", "orchestration",
+                "llm-ready", "llm ready", "ai-friendly documentation",
+                "agent-friendly", "machine-readable documentation",
+                "ai-optimized documentation", "llm-friendly",
+                "ai agent documentation", "documentation for ai",
+                "model context protocol", "mcp server",
+            ]):
                 segment_agentic += 2
                 
             agentic_count += segment_agentic
@@ -430,16 +596,21 @@ class ScoringService:
             # 4. Non-Engineering AI Roles (Specific Logic)
             # 4.2 Requirement: "Agentic Usage outside of engineering... Lead and director roles (very high)"
             # We look for role-specific source types
-            if source_type in ["product_role", "marketing_role", "legal_role"]:
+            non_eng_role_types = [
+                "product_role", "marketing_role", "legal_role",
+                "operations_role", "design_role", "finance_role",
+                "hr_role", "sales_role",
+            ]
+            if source_type in non_eng_role_types or source_type == "careers_ai_keyword_hit":
                 # Base points for finding the JD
                 non_eng_score += 2
                 sources_map["non_eng_ai_roles"].append(source_type)
-                
+
                 # Check for agentic keywords in this specific JD
                 agentic_keywords = ["agent", "orchestration", "autonomous", "automation", "workflow", "genai", "generative"]
                 if any(k in text_lower for k in agentic_keywords):
                     non_eng_score += 5
-                    # Extra boost for Director/Lead?
+                    # Extra boost for Director/Lead
                     if "director" in text_lower or "head of" in text_lower or "lead" in text_lower:
                         non_eng_score += 5
             
@@ -474,7 +645,21 @@ class ScoringService:
              "subdomain_research": 2.0, # High
              "subdomain_engineering": 1.5,
              "subdomain_dev": 1.5,
-             "subdomain_cloud": 1.5
+             "subdomain_cloud": 1.5,
+             "news_article": 0.75,
+             "press_release": 0.75,
+             "investor_relations": 1.0, # Public commitments to investors
+             "newsroom": 0.75,
+             # Non-eng role types (treat like job postings for tool weighting)
+             "product_role": 1.5,
+             "marketing_role": 1.0,
+             "legal_role": 1.0,
+             "operations_role": 1.0,
+             "design_role": 1.0,
+             "finance_role": 1.0,
+             "hr_role": 1.0,
+             "sales_role": 1.0,
+             "careers_ai_keyword_hit": 1.5, # Found via AI keyword search on careers
         }
 
         for src_type, txt in text_segments.items():
@@ -510,27 +695,36 @@ class ScoringService:
 
         # Conflict Resolution / Marketing Only Detection
         # Logic: High AI Keywords on Homepage/Press BUT Zero on GitHub/Eng Blog
+        # IR content with AI keywords prevents marketing-only flag (investor commitments are credible)
         marketing_only = False
         homepage_has_ai = "homepage" in sources_map["ai_keywords"]
         eng_sources = ["github", "engineering_blog", "job_posting", "job_posting_verified", "ats_link", "careers_fallback"]
         eng_has_ai = any(s in sources_map["ai_keywords"] for s in eng_sources) or any(s in sources_map["tool_stack"] for s in eng_sources)
-        
-        if homepage_has_ai and not eng_has_ai and total_keywords > 5:
+        ir_has_ai = "investor_relations" in sources_map["ai_keywords"]
+
+        total_keywords = non_eng_keywords + eng_ai_keywords
+        if homepage_has_ai and not eng_has_ai and not ir_has_ai and total_keywords > 5:
              marketing_only = True
-             # Penalty? Cap Tool Stack score?
-             # For now, just flag it. The calculator might use the flag.
+
+        # Count news-type sources analyzed
+        news_sources_found = sum(1 for st in text_segments.keys() if st in NEWS_SOURCE_TYPES)
 
         return SignalData(
-            ai_keywords=min(total_keywords, 30),
+            ai_keywords=non_eng_keywords,
             agentic_signals=min(agentic_count, 15),
             tool_stack=list(tools_found),
-            non_eng_ai_roles=min(non_eng_score, 15), # Increased cap for Story 4.2
+            non_eng_ai_roles=min(non_eng_score, 15),
+            ai_in_it_signals=min(eng_ai_keywords, 15),
             has_ai_platform_team=has_platform_team,
             jobs_analyzed=len(text_segments),
             source_attribution=sources_map,
             marketing_only=marketing_only,
             weighted_tool_count=weighted_tool_count,
-            confidence_score=confidence
+            confidence_score=confidence,
+            ai_success_points=ai_success_points,
+            ai_plan_points=ai_plan_points,
+            ai_generic_points=ai_generic_points,
+            news_sources_found=news_sources_found,
         )
 
     def _find_job_links(self, html: str, base_url: str) -> list[str]:
@@ -579,6 +773,43 @@ class ScoringService:
                 filtered_links.append(link)
 
         return list(set(filtered_links))[:10]  # Up to 10 candidates
+
+    @staticmethod
+    def scan_ai_job_penetration(html: str) -> tuple[int, int]:
+        """
+        Scan a careers page for total job links and how many mention AI/agent/agentic.
+        Returns (total_links, ai_hits).
+        """
+        if not html:
+            return 0, 0
+
+        soup = BeautifulSoup(html, "html.parser")
+        ai_terms = [
+            "ai", "artificial intelligence", "machine learning", "ml",
+            "agent", "agentic", "llm", "generative", "genai",
+            "data science", "deep learning",
+        ]
+
+        total = 0
+        ai_hits = 0
+
+        for a in soup.find_all("a", href=True):
+            href = a["href"].lower()
+            text = a.get_text().lower().strip()
+
+            # Only count links that look like job postings (not nav, footer, etc.)
+            if not any(k in href for k in ["career", "job", "position", "role", "apply"]):
+                continue
+            if len(text) < 5:  # Skip tiny link texts like ">" or icons
+                continue
+
+            total += 1
+            # Check link text and href for AI terms
+            combined = f"{text} {href}"
+            if any(term in combined for term in ai_terms):
+                ai_hits += 1
+
+        return total, ai_hits
 
     async def _emergency_crawl(self, base_url: str, homepage_html: str, depth: int = 2) -> list[str]:
         """

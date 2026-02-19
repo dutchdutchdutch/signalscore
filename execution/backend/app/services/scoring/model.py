@@ -22,7 +22,7 @@ class SignalWeights:
     agentic_signals: float = 0.20
     tool_stack: float = 0.20
     non_eng_ai: float = 0.25
-    ai_platform_team: float = 0.10
+    ai_in_it: float = 0.10
     
     def validate(self) -> bool:
         """Ensure weights sum to 1.0."""
@@ -31,7 +31,7 @@ class SignalWeights:
             self.agentic_signals +
             self.tool_stack +
             self.non_eng_ai +
-            self.ai_platform_team
+            self.ai_in_it
         )
         return abs(total - 1.0) < 0.001
 
@@ -53,11 +53,11 @@ CATEGORY_THRESHOLDS = {
 
 # Signal normalization caps (for converting raw counts to 0-100 scale)
 SIGNAL_CAPS = {
-    "ai_keywords": 30,      # 30+ keywords = 100 score
+    "ai_keywords": 40,      # 40+ tiered keyword points = 100 score
     "agentic_signals": 15,  # 15+ signals = 100 score
     "tool_stack": 5,        # 5+ tools = 100 score
     "non_eng_ai_roles": 5,  # 5+ non-eng AI roles = 100 score
-    "ai_platform_team": 1,  # 1+ platform team role = 100 score
+    "ai_in_it": 15,         # 15+ engineering AI keywords = 100 score
 }
 
 

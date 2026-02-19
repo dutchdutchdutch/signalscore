@@ -4,10 +4,11 @@
             "company_name": "Shopify",
             "careers_url": "https://www.shopify.com/careers",
             "signals": {
-                "ai_keywords": 17,
+                "ai_keywords": 5,
                 "agentic_signals": 1,
                 "tool_stack": [],
                 "non_eng_ai_roles": 0,
+                "ai_in_it_signals": 12,
                 "has_ai_platform_team": true,
                 "jobs_analyzed": 5
             },
@@ -22,13 +23,14 @@
             "company_name": "Nordstrom",
             "careers_url": "https://careers.nordstrom.com",
             "signals": {
-                "ai_keywords": 23,
+                "ai_keywords": 3,
                 "agentic_signals": 8,
                 "tool_stack": [
                     "sagemaker",
                     "vertex ai"
                 ],
                 "non_eng_ai_roles": 0,
+                "ai_in_it_signals": 20,
                 "has_ai_platform_team": false,
                 "jobs_analyzed": 5
             },
@@ -43,12 +45,13 @@
             "company_name": "Target",
             "careers_url": "https://corporate.target.com/careers",
             "signals": {
-                "ai_keywords": 12,
+                "ai_keywords": 2,
                 "agentic_signals": 12,
                 "tool_stack": [
                     "openai"
                 ],
                 "non_eng_ai_roles": 0,
+                "ai_in_it_signals": 10,
                 "has_ai_platform_team": true,
                 "jobs_analyzed": 5
             },
@@ -68,6 +71,7 @@
                 "agentic_signals": 0,
                 "tool_stack": [],
                 "non_eng_ai_roles": 0,
+                "ai_in_it_signals": 0,
                 "has_ai_platform_team": true,
                 "jobs_analyzed": 5
             },
@@ -85,6 +89,7 @@
                 "agentic_signals": 2,
                 "tool_stack": [],
                 "non_eng_ai_roles": 0,
+                "ai_in_it_signals": 0,
                 "has_ai_platform_team": false,
                 "jobs_analyzed": 6
             },

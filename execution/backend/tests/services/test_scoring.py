@@ -16,7 +16,7 @@ def test_calculator_initialization():
     """Test calculator init with defaults."""
     calc = ScoreCalculator()
     assert calc.weights is not None
-    assert calc.weights.ai_keywords == 0.25
+    assert calc.weights.ai_keywords == 0.10
 
 def test_calculator_custom_weights():
     """Test calculator with custom weights."""
@@ -25,7 +25,7 @@ def test_calculator_custom_weights():
         agentic_signals=0.5,
         tool_stack=0.0,
         non_eng_ai=0.0,
-        ai_platform_team=0.0
+        ai_in_it=0.0
     )
     calc = ScoreCalculator(weights=custom_weights)
     assert calc.weights.ai_keywords == 0.5
@@ -45,16 +45,17 @@ def test_calculate_high_score(calculator):
         agentic_signals=10,  # Good (max 15)
         tool_stack=["sagemaker", "vertex"], # 2 tools (max 5)
         non_eng_ai_roles=2, # Some (max 5)
-        has_ai_platform_team=True, # Yes (max 1)
+        ai_in_it_signals=10, # Engineering AI keywords
+        has_ai_platform_team=True,
         jobs_analyzed=5
     )
-    
+
     score = calculator.calculate("Nordstrom", signals)
-    
+
     assert score.company_name == "Nordstrom"
-    assert score.score > 60  # Should be Medium-High or High
-    assert score.category in [AIReadinessCategory.MEDIUM_HIGH, AIReadinessCategory.HIGH]
-    assert score.evidence[0].startswith("25 AI/ML keywords")
+    assert score.score > 40  # With new weights (non_eng_ai=40%, ai_keywords=10%), score shifts
+    assert score.category in [AIReadinessCategory.MEDIUM_LOW, AIReadinessCategory.MEDIUM_HIGH, AIReadinessCategory.HIGH]
+    assert any("25 AI keyword points" in e for e in score.evidence)
     assert "Dedicated AI platform/strategy team detected" in score.evidence
 
 def test_calculate_low_score(calculator):
@@ -102,5 +103,5 @@ def test_evidence_generation(calculator):
     score = calculator.calculate("TestCorp", signals)
     evidence = score.evidence
     
-    assert any("5 AI/ML keywords" in e for e in evidence)
+    assert any("5 AI keyword points" in e for e in evidence)
     assert any("Tool stack: openai" in e for e in evidence)

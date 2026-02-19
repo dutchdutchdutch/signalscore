@@ -9,12 +9,18 @@ class SignalResponse(BaseModel):
     agentic_signals: int
     tool_stack: List[str]
     non_eng_ai_roles: int
+    ai_in_it_signals: int = 0
     has_ai_platform_team: bool
     jobs_analyzed: int
     # 4.2 New Fields
     marketing_only: bool = False
     source_attribution: Dict[str, List[str]] = {}
     confidence_score: float = 0.5
+    # Tiered AI keyword breakdown
+    ai_success_points: int = 0
+    ai_plan_points: int = 0
+    ai_generic_points: int = 0
+    news_sources_found: int = 0
 
 
 class ComponentScoresResponse(BaseModel):
@@ -22,7 +28,7 @@ class ComponentScoresResponse(BaseModel):
     agentic_signals: float
     tool_stack: float
     non_eng_ai: float
-    ai_platform_team: float
+    ai_in_it: float
 
 
 class ScoringStatusResponse(BaseModel):

@@ -26,6 +26,7 @@ class SignalData:
     agentic_signals: int = 0
     tool_stack: List[str] = field(default_factory=list)
     non_eng_ai_roles: int = 0
+    ai_in_it_signals: int = 0
     has_ai_platform_team: bool = False
     jobs_analyzed: int = 0
     sample_quotes: List[str] = field(default_factory=list)
@@ -36,18 +37,38 @@ class SignalData:
     # Fix 1 & 2: Weighting and Confidence
     weighted_tool_count: float = 0.0
     confidence_score: float = 0.5 # Default low
-    
+
+    # Tiered AI keyword sub-scores
+    ai_success_points: int = 0
+    ai_plan_points: int = 0
+    ai_generic_points: int = 0
+    news_sources_found: int = 0
+
+    # AI job penetration: what % of visible job links mention AI/agent/agentic
+    ai_job_total: int = 0
+    ai_job_hits: int = 0
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "ai_keywords": self.ai_keywords,
             "agentic_signals": self.agentic_signals,
             "tool_stack": self.tool_stack,
             "non_eng_ai_roles": self.non_eng_ai_roles,
+            "ai_in_it_signals": self.ai_in_it_signals,
             "has_ai_platform_team": self.has_ai_platform_team,
             "jobs_analyzed": self.jobs_analyzed,
             "source_attribution": self.source_attribution,
             "marketing_only": self.marketing_only,
             "confidence_score": self.confidence_score,
+            "ai_success_points": self.ai_success_points,
+            "ai_plan_points": self.ai_plan_points,
+            "ai_generic_points": self.ai_generic_points,
+            "news_sources_found": self.news_sources_found,
+            "ai_job_penetration": {
+                "total": self.ai_job_total,
+                "ai_hits": self.ai_job_hits,
+                "pct": round(self.ai_job_hits / self.ai_job_total * 100, 1) if self.ai_job_total > 0 else 0,
+            },
         }
 
 
@@ -118,7 +139,13 @@ class ScoreCalculator:
             SIGNAL_CAPS["non_eng_ai_roles"]
         )
         
-        platform_team_score = 100.0 if signals.has_ai_platform_team else 0.0
+        ai_in_it_score = self._normalize(
+            signals.ai_in_it_signals,
+            SIGNAL_CAPS["ai_in_it"]
+        )
+        # Platform team detection acts as a floor boost
+        if signals.has_ai_platform_team:
+            ai_in_it_score = max(ai_in_it_score, 50.0)
 
         # FIX 3: Marketing Only Penalty
         if signals.marketing_only:
@@ -128,7 +155,7 @@ class ScoreCalculator:
             # So Keywords are present but suspect.
             ai_keywords_score *= 0.5
             tool_stack_score *= 0.5
-            platform_team_score *= 0.5 
+            ai_in_it_score *= 0.5
             # We keep non_eng_score (might be job listings) and agentic_score (might be specific terms)
         
         # Store component scores
@@ -137,7 +164,7 @@ class ScoreCalculator:
             "agentic_signals": agentic_score,
             "tool_stack": tool_stack_score,
             "non_eng_ai": non_eng_score,
-            "ai_platform_team": platform_team_score,
+            "ai_in_it": ai_in_it_score,
         }
         
         # Apply weights
@@ -146,7 +173,7 @@ class ScoreCalculator:
             agentic_score * self.weights.agentic_signals +
             tool_stack_score * self.weights.tool_stack +
             non_eng_score * self.weights.non_eng_ai +
-            platform_team_score * self.weights.ai_platform_team
+            ai_in_it_score * self.weights.ai_in_it
         )
 
         # Build base evidence list
@@ -203,7 +230,15 @@ class ScoreCalculator:
         evidence = []
         
         if signals.ai_keywords > 0:
-            evidence.append(f"{signals.ai_keywords} AI/ML keywords found across {signals.jobs_analyzed} jobs")
+            parts = []
+            if signals.ai_success_points > 0:
+                parts.append(f"{signals.ai_success_points} success-evidence")
+            if signals.ai_plan_points > 0:
+                parts.append(f"{signals.ai_plan_points} strategy/plan")
+            if signals.ai_generic_points > 0:
+                parts.append(f"{signals.ai_generic_points} general-mention")
+            tier_detail = f" ({', '.join(parts)})" if parts else ""
+            evidence.append(f"{signals.ai_keywords} AI keyword points{tier_detail} across {signals.jobs_analyzed} sources")
         
         if signals.tool_stack:
             tools = ", ".join(signals.tool_stack[:3])
@@ -212,12 +247,22 @@ class ScoreCalculator:
         if signals.agentic_signals > 0:
             evidence.append(f"{signals.agentic_signals} agentic/automation signals")
         
+        if signals.ai_in_it_signals > 0:
+            evidence.append(f"{signals.ai_in_it_signals} AI keywords found in engineering sources")
+
         if signals.has_ai_platform_team:
             evidence.append("Dedicated AI platform/strategy team detected")
-        
+
         if signals.non_eng_ai_roles > 0:
             evidence.append(f"{signals.non_eng_ai_roles} AI mentions in non-engineering roles")
-        
+
+        if signals.news_sources_found > 0:
+            evidence.append(f"{signals.news_sources_found} news/press/IR sources analyzed")
+
+        if signals.ai_job_total > 0:
+            pct = round(signals.ai_job_hits / signals.ai_job_total * 100, 1)
+            evidence.append(f"AI job penetration: {signals.ai_job_hits}/{signals.ai_job_total} ({pct}%) job links mention AI/agent")
+
         # Add sample quotes
         evidence.extend(signals.sample_quotes[:2])
         
