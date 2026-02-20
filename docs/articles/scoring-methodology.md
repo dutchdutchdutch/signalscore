@@ -29,19 +29,19 @@ SignalScore separates leaders from laggards in AI Readiness \- **providing decis
 * **Investors:** Validate AI adoption claims during due diligence. A company claiming "AI-powered" with a dated tech stack or zero AI platform engineers is a significant red flag.  
 * **Job-Seekers & Employees:** Evaluate if a company's "AI transformation" is real. Job seekers can assess whether a role is forward-looking or AI-vulnerable, while current employees can benchmark their employer against competitors to assess career risk.
 
-The stakes: Organizations scoring above 80 (Leading) achieve 2.8x faster product release cycles. Employees at firms scoring  below 60 (Trailing) face 18-24 month skill obsolescence and 29% wage penalties. SignalScore provides the data to choose acceleration over stagnation.
+The stakes: Organizations scoring above 80 (Leading) achieve 2.8x faster product release cycles. Employees at firms scoring  below 60 (Lagging) face 18-24 month skill obsolescence and 29% wage penalties. SignalScore provides the data to choose acceleration over stagnation.
 
 ## HOW  SingleScore measures  AI Readiness measured
 
-The SignalScore architecture operates on the premise that genuine technological shifts leave a digital trail. The model uses autonomous discovery agents to crawl public digital artifacts, aggregating data across five weighted categories to calculate a "Kinetic Energy" score. Results are normalized against a "Ground Truth" dataset of verified AI-forward firms (e.g., Google, Shopify).
+The SignalScore architecture operates on the premise that genuine technological shifts leave a digital trail. The model uses autonomous discovery agents to crawl public digital artifacts, aggregating data across five weighted categories to calculate a "Kinetic Energy" score. Engineering evidence (AI in IT) carries the highest weight at 25%, reflecting the principle that *building* AI matters more than *mentioning* it. Results are normalized against a "Ground Truth" dataset of verified AI-forward firms (e.g., Google, Shopify).
 
 ### The Five Core Signals (0–100 Rating):
 
-1. **AI Keywords (25%):** Uses a three-tier scoring system that separates signal from noise. **Success Evidence** (3 pts per match) captures proof of AI in production — deployed models, inference pipelines, measurable ROI. **Strategy/Plan** (2 pts) captures roadmap signals — AI-first mandates, Chief AI Officer hires, dedicated budgets. **Generic Mentions** (1 pt) captures baseline references — "machine learning," "data science," "LLM." This tiered approach rewards companies showing results over those only talking about plans.
+1. **AI in IT (25%):** The highest-weighted signal, measuring AI keyword density within engineering-specific sources (GitHub, engineering blogs, verified job postings). This category captures whether a company is *building* AI capability, not just talking about it. Detection of a dedicated AI platform team acts as a score floor, confirming the company is building the infrastructure layer required for agents to function on internal data.
 2. **Agentic Signals (20%):** The most forward-looking metric, hunting for the vocabulary of the *next* phase of AI: "Orchestration," "Self-healing," "Multi-agent workflows," and emerging indicators like "Model Context Protocol," "LLM-ready documentation," and "AI-friendly documentation." This detects movement toward Agentic flows and AI-optimized infrastructure.
-3. **Non-Engineering Roles (25%):** A critical differentiator, scanning for AI adoption in departments like Finance, HR, Marketing, Legal, Sales, and Operations. High scores here indicate Systemic adoption (Gartner Level 4), not isolated R\&D. Scores are boosted when non-engineering job descriptions contain agentic keywords (agent, orchestration, automation, GenAI), with additional weight for Director and Lead-level roles — signaling executive commitment to AI-augmented workflows.
-4. **Tool Stack (20%):** Identifies the "Tools of the Trade" using source-weighted detection. Tools found in GitHub repos or verified job postings carry higher weight than homepage mentions. Tracked tools include frameworks (PyTorch, TensorFlow), LLM tooling (LangChain, OpenAI, Anthropic, Hugging Face), cloud platforms (AWS, GCP, Azure, Databricks), and AI-native dev tools (Copilot, Cursor, Replit).
-5. **AI in IT (10%):** Measures AI keyword density within engineering-specific sources (GitHub, engineering blogs, verified job postings). Detection of a dedicated AI platform team acts as a score floor, confirming the company is building the infrastructure layer required for agents to function on internal data.
+3. **Tool Stack (20%):** Identifies the "Tools of the Trade" using source-weighted detection. Tools found in GitHub repos or verified job postings carry higher weight than homepage mentions. Tracked tools include frameworks (PyTorch, TensorFlow), LLM tooling (LangChain, OpenAI, Anthropic, Hugging Face), cloud platforms (AWS, GCP, Azure, Databricks), and AI-native dev tools (Copilot, Cursor, Replit).
+4. **Non-Engineering Roles (20%):** A critical differentiator, scanning for AI adoption in departments like Finance, HR, Marketing, Legal, Sales, Product, and Operations. High scores here indicate Systemic adoption (Gartner Level 4), not isolated R\&D. Uses a two-tier scoring system: **AI Competency** (7 pts) is awarded when job descriptions require AI as a skill (prompt engineering, AI literacy, GenAI fluency), while **AI Mentioned** (2 pts) captures roles that reference AI in context without requiring it as a competency. A **Middle Management Bonus** (+3 pts) rewards manager, senior, and lead-level roles showing AI requirements — middle management is where AI-as-competency signals true organizational readiness, more so than executive titles.
+5. **AI Keywords (15%):** Uses a three-tier scoring system that separates signal from noise. **Success Evidence** (3 pts per match) captures proof of AI in production — deployed models, inference pipelines, measurable ROI. **Strategy/Plan** (2 pts) captures roadmap signals — AI-first mandates, Chief AI Officer hires, dedicated budgets. **Generic Mentions** (1 pt) captures baseline references — "machine learning," "data science," "LLM." This tiered approach rewards companies showing results over those only talking about plans.
 
 #### Verification, Bonuses, and Penalties
 To mitigate "AI-washing" risk, each source type carries a credibility multiplier:
@@ -49,16 +49,19 @@ To mitigate "AI-washing" risk, each source type carries a credibility multiplier
 | Source Type | Weight | Rationale |
 | ----- | ----- | ----- |
 | GitHub / Verified Job Posting / ATS Link | **2.0x** | Hard evidence of implementation or hiring intent |
-| Engineering Blog / Careers Page | **1.5x** | Technical depth, active recruiting |
-| Investor Relations | **1.0x** | Public commitments with accountability |
-| News / Press Release | **0.75x** | Third-party coverage, subject to recency decay |
+| AI / Research Subdomain (ai.\*, research.\*, labs.\*) | **2.0x** | Active AI product or research presence |
+| Engineering Blog / Careers Page / Dev Subdomain | **1.5x** | Technical depth, active recruiting |
+| Investor Relations / Conference Speaking | **1.0x** | Public commitments with accountability |
+| News / Press Release / Newsroom | **0.75x** | Third-party coverage, subject to recency decay |
 | Homepage | **0.5x** | Marketing copy, lowest credibility |
 
 **Recency Weighting:** News and press sources are subject to date-based decay — full weight within 45 days, half weight at 45–90 days, zero weight beyond 90 days.
 
 **Excellence Boost:** A **\+10 Bonus** is awarded if two or more categories score above 90, rewarding companies with exceptional depth across multiple signals.
 
-**High-Water Mark ("3 of 5 Rule"):** If three or more categories score above 80, the company is guaranteed at least an "On Par" rating — preventing strong multi-signal profiles from being dragged down by one weak area.
+**High-Water Mark ("3 of 5 Rule"):** If three or more categories score above 80, the company is guaranteed at least an "Operational" rating — preventing strong multi-signal profiles from being dragged down by one weak area.
+
+**AI Platform Provider Override:** Companies that build and provide AI tools and platforms to others (e.g., Google AI Studio, Anthropic Claude, OpenAI GPT) represent the benchmark for transformational AI adoption. When the system detects active AI-focused subdomains with provider-language content (API documentation, SDKs, model serving, developer platforms), a score floor of 95 (Transformational) is applied. SignalScore is primarily designed to measure non-tech companies, but AI platform providers serve as the ground truth reference point.
 
 **Marketing-Only Penalty:** If AI keywords appear exclusively on the homepage with zero corroboration from engineering sources (GitHub, blogs, job postings) or investor relations, keyword, tool stack, and AI-in-IT scores are reduced by 50%.
 
@@ -68,9 +71,9 @@ To mitigate "AI-washing" risk, each source type carries a credibility multiplier
 | ----- | ----- | ----- |
 | **95–100** | **Transformational** | Industry-defining AI adoption; agentic workflows in production, AI embedded widely across non-engineering functions. |
 | **80–94** | **Leading** | Strong public signals; dedicated AI platform teams, modern tooling, and AI adoption in non-engineering functions. |
-| **60–79** | **On Par** | Operational AI presence; actively hiring AI roles, some tool adoption, limited agentic signals. |
-| **30–59** | **Trailing** | Early exploration; AI keywords in job posts, but no platform team or systematic deployment. |
-| **0–29** | **Lagging** | Minimal public AI activity; homepage mentions AI, but zero engineering evidence. |
+| **60–79** | **Operational** | Operational AI presence; actively hiring AI roles, some tool adoption, limited agentic signals. |
+| **30–59** | **Lagging** | Early exploration; AI keywords in job posts, but no platform team or systematic deployment. |
+| **0–29** | **No Signal** | Minimal public AI activity; homepage mentions AI, but zero engineering evidence. |
 
 **Limitations**
 
@@ -95,7 +98,7 @@ The established consulting frameworks are designed to measure compliance and fou
 
 1. **Use Big Firm Models (Cisco/Gartner) for Defense:** Ensure your foundation (Infrastructure, Security, Governance) is compliant and scalable.  
 2. **Use SignalScore for Offense:** Audit your *actual* market posture. Run it against your own public footprint.  
-3. **Self-Correct:** If your internal Gartner assessment says you are "Level 4 (Systemic)" but your SignalScore is "35 (Trailing)," you have a **"Marketing-Reality Gap"** ;you are likely talking about AI more than you are leveraging it.*
+3. **Self-Correct:** If your internal Gartner assessment says you are "Level 4 (Systemic)" but your SignalScore is "35 (Lagging)," you have a **"Marketing-Reality Gap"** ;you are likely talking about AI more than you are leveraging it.*
 
 ## Act Now
 

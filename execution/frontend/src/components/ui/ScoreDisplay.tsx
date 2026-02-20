@@ -21,25 +21,20 @@ export const categoryColors: Record<string, { bg: string; text: string; ring: st
         text: 'rgb(168, 85, 247)',
         ring: 'rgb(147, 51, 234)',
     },
-    high: {
+    leading: {
         bg: 'rgba(34, 197, 94, 0.15)',
         text: 'rgb(34, 197, 94)',
         ring: 'rgb(22, 163, 74)',
     },
-    medium_high: {
+    operational: {
         bg: 'rgba(59, 130, 246, 0.15)',
         text: 'rgb(59, 130, 246)',
         ring: 'rgb(37, 99, 235)',
     },
-    medium_low: {
+    lagging: {
         bg: 'rgba(234, 179, 8, 0.15)',
         text: 'rgb(234, 179, 8)',
         ring: 'rgb(202, 138, 4)',
-    },
-    low: {
-        bg: 'rgba(239, 68, 68, 0.15)',
-        text: 'rgb(239, 68, 68)',
-        ring: 'rgb(220, 38, 38)',
     },
     no_signal: {
         bg: 'rgba(107, 114, 128, 0.15)',

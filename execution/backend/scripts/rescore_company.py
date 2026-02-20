@@ -238,8 +238,6 @@ async def rescore_only_mode(company_name: str):
             ai_plan_points=stored_signals.get("ai_plan_points", 0),
             ai_generic_points=stored_signals.get("ai_generic_points", 0),
             news_sources_found=stored_signals.get("news_sources_found", 0),
-            ai_job_total=stored_signals.get("ai_job_penetration", {}).get("total", 0),
-            ai_job_hits=stored_signals.get("ai_job_penetration", {}).get("ai_hits", 0),
         )
 
         # Recalculate with current weights

@@ -28,6 +28,7 @@ class SignalData:
     non_eng_ai_roles: int = 0
     ai_in_it_signals: int = 0
     has_ai_platform_team: bool = False
+    is_ai_platform_provider: bool = False
     jobs_analyzed: int = 0
     sample_quotes: List[str] = field(default_factory=list)
     # New fields for Story 4.2
@@ -44,10 +45,6 @@ class SignalData:
     ai_generic_points: int = 0
     news_sources_found: int = 0
 
-    # AI job penetration: what % of visible job links mention AI/agent/agentic
-    ai_job_total: int = 0
-    ai_job_hits: int = 0
-
     def to_dict(self) -> Dict[str, Any]:
         return {
             "ai_keywords": self.ai_keywords,
@@ -56,6 +53,7 @@ class SignalData:
             "non_eng_ai_roles": self.non_eng_ai_roles,
             "ai_in_it_signals": self.ai_in_it_signals,
             "has_ai_platform_team": self.has_ai_platform_team,
+            "is_ai_platform_provider": self.is_ai_platform_provider,
             "jobs_analyzed": self.jobs_analyzed,
             "source_attribution": self.source_attribution,
             "marketing_only": self.marketing_only,
@@ -64,11 +62,6 @@ class SignalData:
             "ai_plan_points": self.ai_plan_points,
             "ai_generic_points": self.ai_generic_points,
             "news_sources_found": self.news_sources_found,
-            "ai_job_penetration": {
-                "total": self.ai_job_total,
-                "ai_hits": self.ai_job_hits,
-                "pct": round(self.ai_job_hits / self.ai_job_total * 100, 1) if self.ai_job_total > 0 else 0,
-            },
         }
 
 
@@ -180,7 +173,15 @@ class ScoreCalculator:
         evidence = self._build_evidence(signals)
         
         # --- SIGNAL BOOSTER LOGIC ---
-        
+
+        # 0. AI Platform Provider Override
+        # Companies that BUILD and PROVIDE AI tools/platforms to others
+        # (e.g., Google AI Studio, Anthropic Claude, OpenAI GPT) are benchmark
+        # transformational companies. This overrides the weighted score.
+        if signals.is_ai_platform_provider:
+            weighted_score = max(weighted_score, 95.0)
+            evidence.append("AI Platform Provider: Company builds and provides AI tools/platforms to others")
+
         # 1. Excellence Boost: Reward spikey profiles
         # If 2+ components are >= 90 (Excellent), add +10 boost
         excellent_components = sum(1 for s in component_scores.values() if s >= 90.0)
@@ -192,20 +193,18 @@ class ScoreCalculator:
         category = get_category(weighted_score)
 
         # 2. High-Water Mark (The "3 of 5" Rule)
-        # If 3+ components are >= 80 (High), ensure at least MEDIUM_HIGH
+        # If 3+ components are >= 80 (High), ensure at least OPERATIONAL
         high_components = sum(1 for s in component_scores.values() if s >= 80.0)
         if high_components >= 3:
-            min_category = AIReadinessCategory.MEDIUM_HIGH
+            min_category = AIReadinessCategory.OPERATIONAL
             # If current category is lower than min_category (by threshold), upgrade it
-            # We assume order: LOW < MEDIUM_LOW < MEDIUM_HIGH < HIGH < TRANSFORMATIONAL
             # Simple check: map category to "rank"
             cat_ranks = {
-                AIReadinessCategory.LOW: 0,
-                AIReadinessCategory.MEDIUM_LOW: 1,
-                AIReadinessCategory.MEDIUM_HIGH: 2,
-                AIReadinessCategory.HIGH: 3,
+                AIReadinessCategory.NO_SIGNAL: 0,
+                AIReadinessCategory.LAGGING: 1,
+                AIReadinessCategory.OPERATIONAL: 2,
+                AIReadinessCategory.LEADING: 3,
                 AIReadinessCategory.TRANSFORMATIONAL: 4,
-                AIReadinessCategory.NO_SIGNAL: -1
             }
             
             if cat_ranks.get(category, -1) < cat_ranks[min_category]:
@@ -253,15 +252,14 @@ class ScoreCalculator:
         if signals.has_ai_platform_team:
             evidence.append("Dedicated AI platform/strategy team detected")
 
+        if signals.is_ai_platform_provider:
+            evidence.append("AI Platform Provider: builds and provides AI tools/platforms")
+
         if signals.non_eng_ai_roles > 0:
             evidence.append(f"{signals.non_eng_ai_roles} AI mentions in non-engineering roles")
 
         if signals.news_sources_found > 0:
             evidence.append(f"{signals.news_sources_found} news/press/IR sources analyzed")
-
-        if signals.ai_job_total > 0:
-            pct = round(signals.ai_job_hits / signals.ai_job_total * 100, 1)
-            evidence.append(f"AI job penetration: {signals.ai_job_hits}/{signals.ai_job_total} ({pct}%) job links mention AI/agent")
 
         # Add sample quotes
         evidence.extend(signals.sample_quotes[:2])

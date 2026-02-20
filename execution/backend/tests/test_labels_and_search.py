@@ -75,10 +75,9 @@ def test_api_labels_check_all_categories():
     
     test_cases = [
         ("FakeNoSignal", 0.0, AIReadinessCategory.NO_SIGNAL, "No Signal"),
-        ("FakeLagging", 10.0, AIReadinessCategory.LOW, "Lagging"),
-        ("FakeTrailing", 40.0, AIReadinessCategory.MEDIUM_LOW, "Trailing"),
-        ("FakeOperational", 70.0, AIReadinessCategory.MEDIUM_HIGH, "On Par/Operational"),
-        ("FakeLeading", 90.0, AIReadinessCategory.HIGH, "Leading"),
+        ("FakeLagging", 40.0, AIReadinessCategory.LAGGING, "Lagging"),
+        ("FakeOperational", 70.0, AIReadinessCategory.OPERATIONAL, "Operational"),
+        ("FakeLeading", 90.0, AIReadinessCategory.LEADING, "Leading"),
         ("FakeTransformational", 98.0, AIReadinessCategory.TRANSFORMATIONAL, "Transformational"),
     ]
     

@@ -25,6 +25,7 @@ class DiscoveryService:
     def __init__(self):
         self.ats_detector = ATSDetector()
         self.search_failed = False
+        self.collected_snippets: List[str] = []
 
     def find_sources(self, company_name: str, main_domain: str) -> List[Dict[str, str]]:
         """
@@ -48,14 +49,25 @@ class DiscoveryService:
         if careers_url:
             discovered.append({"url": careers_url, "type": "careers"})
             
-        # 4. Search for AI Product/Legal/Marketing (Targeting Middle Management)
-        # We try to find specific job descriptions or team pages that mention agentic workflows
-        # Query: company role (agent OR orchestration OR AI)
-        for role in ["product manager", "marketing manager", "legal counsel"]:
-            # We search for the role + keywords to find the JD that mentions them
-            role_url = self._search_role(company_name, role, '("agent" OR "orchestration" OR "AI")')
+        # 4. Search for middle management roles with heavy communication/review/reporting
+        # responsibilities. The hypothesis: these roles should show AI competency as
+        # a baseline expectation at AI-ready companies.
+        non_eng_role_queries = [
+            ("product manager",     "product_role"),
+            ("program manager",     "operations_role"),
+            ("project manager",     "operations_role"),
+            ("legal counsel",       "legal_role"),
+            ("compliance",          "legal_role"),
+            ("financial analyst",   "finance_role"),
+            ("marketing manager",   "marketing_role"),
+            ("design manager",      "design_role"),
+            ("operations manager",  "operations_role"),
+        ]
+        ai_keywords = '("AI" OR "machine learning" OR "generative AI" OR "AI tools" OR "prompt engineering")'
+        for role_query, role_type in non_eng_role_queries:
+            role_url = self._search_role(company_name, role_query, ai_keywords)
             if role_url:
-                 discovered.append({"url": role_url, "type": f"{role.split(' ')[0]}_role"})
+                 discovered.append({"url": role_url, "type": role_type})
  
         # 5. Search for "AI Conference/Speaking" (Targeting Executive Thought Leadership)
         # Query: company "AI" "Conference" "Speaker"
@@ -80,6 +92,10 @@ class DiscoveryService:
         # 9. Careers keyword search — find job postings mentioning AI/agent/agentic
         careers_ai_results = self._search_careers_ai_keywords(company_name, main_domain)
         discovered.extend(careers_ai_results)
+
+        # 10. Targeted AI evidence search — mine Google snippets for hiring,
+        #     strategy, and policy signals that may not appear on the website
+        self._search_ai_evidence(company_name)
 
         # FALLBACK: If we found NOTHING, it might be a search ban or just poor indexing.
         # Story 4.3: Return heuristic candidates for deep crawling.
@@ -157,30 +173,61 @@ class DiscoveryService:
 
     def _search_careers_ai_keywords(self, company_name: str, domain: str) -> List[Dict[str, str]]:
         """
-        Search the company's careers pages for job postings mentioning AI/agent/agentic.
-        This surfaces high-signal non-engineering roles without crawling every category.
+        Search for job postings mentioning AI across the company's own careers pages
+        and common ATS platforms. Uses broader vocabulary to catch non-engineering
+        roles that involve AI (e.g., "AI tools", "data-driven", "prompt engineering").
         """
         clean_domain = domain.replace("www.", "")
 
-        # Keyword search scoped to the company's careers pages
-        query = f'site:{clean_domain}/careers ("agentic" OR "AI skills" OR "agent" OR "generative AI" OR "machine learning")'
+        ai_terms = (
+            '"agentic" OR "AI skills" OR "generative AI" OR "machine learning" '
+            'OR "AI tools" OR "data-driven" OR "prompt engineering" OR "AI literacy" '
+            'OR "artificial intelligence" OR "AI strategy"'
+        )
+
+        # Search the company's own careers pages
+        queries = [
+            f'site:{clean_domain}/careers ({ai_terms})',
+            f'site:{clean_domain}/jobs ({ai_terms})',
+        ]
+
+        # Also search common ATS platforms for this company's roles
+        ats_domains = [
+            "greenhouse.io", "jobs.lever.co", "myworkdayjobs.com",
+            "smartrecruiters.com", "icims.com", "ashbyhq.com",
+        ]
+        ats_site_filter = " OR ".join(f"site:{d}" for d in ats_domains)
+        queries.append(
+            f'{company_name} ({ai_terms}) ({ats_site_filter})'
+        )
+
         found = []
-        try:
-            results = list(search(query, num_results=5, advanced=True))
-            for result in results[:5]:
-                url = result.url
-                # Skip the main careers landing page itself
-                if url.rstrip("/").endswith("/careers"):
-                    continue
-                found.append({"url": url, "type": "careers_ai_keyword_hit"})
-                logger.info(f"Careers AI keyword hit: {result.title} -> {url}")
-        except Exception as e:
-            error_str = str(e).lower()
-            if "429" in error_str or "rate" in error_str or "too many" in error_str:
-                logger.warning(f"Careers AI keyword search rate-limited for {company_name}")
-                self.search_failed = True
-            else:
-                logger.error(f"Careers AI keyword search failed for {company_name}: {e}")
+        seen_urls = set()
+        for query in queries:
+            try:
+                results = list(search(query, num_results=5, advanced=True))
+                # Capture snippet text from all results
+                for result in results:
+                    snippet = f"{result.title}. {result.description}"
+                    if snippet.strip(". "):
+                        self.collected_snippets.append(snippet)
+                for result in results[:5]:
+                    url = result.url
+                    if url in seen_urls:
+                        continue
+                    # Skip the main careers landing page itself
+                    if url.rstrip("/").endswith("/careers") or url.rstrip("/").endswith("/jobs"):
+                        continue
+                    seen_urls.add(url)
+                    found.append({"url": url, "type": "careers_ai_keyword_hit"})
+                    logger.info(f"Careers AI keyword hit: {result.title} -> {url}")
+            except Exception as e:
+                error_str = str(e).lower()
+                if "429" in error_str or "rate" in error_str or "too many" in error_str:
+                    logger.warning(f"Careers AI keyword search rate-limited for {company_name}")
+                    self.search_failed = True
+                else:
+                    logger.error(f"Careers AI keyword search failed for {company_name}: {e}")
         return found
 
     def _check_subdomain_exists(self, url: str) -> bool:
@@ -242,6 +289,11 @@ class DiscoveryService:
         found = []
         try:
             results = list(search(query, num_results=5, advanced=True))
+            # Capture snippet text from all results
+            for result in results:
+                snippet = f"{result.title}. {result.description}"
+                if snippet.strip(". "):
+                    self.collected_snippets.append(snippet)
             for result in results[:3]:
                 url = result.url
                 if any(d in url for d in wire_domains):
@@ -256,6 +308,36 @@ class DiscoveryService:
             else:
                 logger.error(f"News search failed for {company_name}: {e}")
         return found
+
+    def _search_ai_evidence(self, company_name: str) -> None:
+        """
+        Targeted search to surface AI hiring, strategy, and policy signals
+        from Google snippets. Does NOT return URLs — the value is the snippet
+        text itself, which gets collected into self.collected_snippets and
+        later analyzed as a signal source.
+        """
+        queries = [
+            # Hiring signals: AI-specific roles with titles and compensation
+            f'{company_name} "generative AI" OR "AI product manager" OR "AI engineer" OR "machine learning engineer" job',
+            # Strategy & policy signals: organizational AI maturity
+            f'{company_name} "AI strategy" OR "AI guidelines" OR "responsible AI" OR "AI governance" OR "AI adoption"',
+        ]
+
+        for query in queries:
+            try:
+                results = list(search(query, num_results=5, advanced=True))
+                for result in results:
+                    snippet = f"{result.title}. {result.description}"
+                    if snippet.strip(". "):
+                        self.collected_snippets.append(snippet)
+                        logger.info(f"AI evidence snippet: {snippet[:100]}...")
+            except Exception as e:
+                error_str = str(e).lower()
+                if "429" in error_str or "rate" in error_str or "too many" in error_str:
+                    logger.warning(f"AI evidence search rate-limited for {company_name}")
+                    self.search_failed = True
+                else:
+                    logger.error(f"AI evidence search failed for {company_name}: {e}")
 
     def _generate_fallback_candidates(self, domain: str) -> List[Dict[str, str]]:
         """Generate standard career URL patterns when search fails."""
@@ -301,21 +383,27 @@ class DiscoveryService:
         try:
             # num_results=3 is usually enough to find the top hit
             results = list(search(query, num_results=3, advanced=True))
-            
+
+            # Capture snippet text from ALL results (even ones we don't use as URLs)
+            for result in results:
+                snippet = f"{result.title}. {result.description}"
+                if snippet.strip(". "):
+                    self.collected_snippets.append(snippet)
+
             for result in results:
                 url = result.url
-                
+
                 # Check domain filter
                 if domain_filter and domain_filter not in url:
                     continue
-                    
+
                 # Check keyword filter (simplistic)
                 if keyword_filter and keyword_filter.lower() not in url.lower() and keyword_filter.lower() not in result.title.lower():
                      # If generic, maybe perform deeper check? For now, lenient.
                      pass
 
                 return url
-                
+
         except Exception as e:
             error_str = str(e).lower()
             if "429" in error_str or "rate" in error_str or "too many" in error_str:
@@ -324,5 +412,5 @@ class DiscoveryService:
             else:
                 logger.error(f"Search failed for query '{query}': {str(e)}")
             return None
-        
+
         return None

@@ -2,11 +2,11 @@
 AI Readiness Signal Weights and Category Thresholds.
 
 Based on validation sprint findings:
-- Nordstrom: 68 (Medium-High) - 23 AI keywords, SageMaker/Vertex AI
-- Target: 62 (Medium-High) - 12 AI keywords, OpenAI, strong agentic signals
-- Shopify: 58 (Medium-High) - 17 AI keywords, culture mentions
-- Macy's: 8 (Low) - 0 signals despite AI Strategy role
-- Stellantis: 5 (Low) - 0 AI keywords across all domains
+- Nordstrom: 68 (Operational) - 23 AI keywords, SageMaker/Vertex AI
+- Target: 62 (Operational) - 12 AI keywords, OpenAI, strong agentic signals
+- Shopify: 58 (Lagging) - 17 AI keywords, culture mentions
+- Macy's: 8 (No Signal) - 0 signals despite AI Strategy role
+- Stellantis: 5 (No Signal) - 0 AI keywords across all domains
 """
 
 from dataclasses import dataclass
@@ -18,11 +18,11 @@ from app.models.enums import AIReadinessCategory
 @dataclass
 class SignalWeights:
     """Weights for each signal category (must sum to 1.0)."""
-    ai_keywords: float = 0.25
+    ai_keywords: float = 0.15
     agentic_signals: float = 0.20
     tool_stack: float = 0.20
-    non_eng_ai: float = 0.25
-    ai_in_it: float = 0.10
+    non_eng_ai: float = 0.20
+    ai_in_it: float = 0.25
     
     def validate(self) -> bool:
         """Ensure weights sum to 1.0."""
@@ -41,13 +41,12 @@ DEFAULT_WEIGHTS = SignalWeights()
 
 
 # Category thresholds (0-100 scale)
-# Category thresholds (0-100 scale)
 CATEGORY_THRESHOLDS = {
     AIReadinessCategory.TRANSFORMATIONAL: 95,
-    AIReadinessCategory.HIGH: 80,         # Leading
-    AIReadinessCategory.MEDIUM_HIGH: 60,  # Operational
-    AIReadinessCategory.MEDIUM_LOW: 30,   # Trailing
-    AIReadinessCategory.LOW: 0,           # Lagging
+    AIReadinessCategory.LEADING: 80,
+    AIReadinessCategory.OPERATIONAL: 60,
+    AIReadinessCategory.LAGGING: 30,
+    AIReadinessCategory.NO_SIGNAL: 0,
 }
 
 
@@ -61,19 +60,37 @@ SIGNAL_CAPS = {
 }
 
 
-# Known AI/ML tools for detection
+# Known AI/ML tools for detection (reference list — detection logic in scoring_service.py)
 KNOWN_TOOLS = [
     # Cloud ML Platforms
-    "sagemaker", "vertex ai", "bedrock", "azure ml",
-    # Frameworks
-    "pytorch", "tensorflow", "jax", "keras",
-    # LLM Tools
-    "openai", "anthropic", "langchain", "llamaindex",
+    "sagemaker", "vertex ai", "bedrock", "azure ml", "azure openai",
+    "azure cognitive", "google cloud ai", "amazon q",
+    # Frameworks & Libraries
+    "pytorch", "tensorflow", "jax", "keras", "scikit-learn",
+    "xgboost", "lightgbm", "catboost", "onnx", "triton inference",
+    # LLM Providers & APIs
+    "openai", "anthropic", "cohere", "mistral", "groq",
+    "together ai", "fireworks ai", "replicate", "ollama", "perplexity",
+    # LLM Frameworks & Orchestration
+    "langchain", "langgraph", "langsmith", "llamaindex",
+    "semantic kernel", "haystack", "dspy", "crewai", "autogen",
+    # Model Hubs & Pretrained
     "huggingface", "transformers",
-    # MLOps
-    "mlflow", "kubeflow", "wandb", "neptune",
-    # Other
-    "databricks", "snowflake ml", "copilot",
+    # MLOps & Experiment Tracking
+    "mlflow", "kubeflow", "wandb", "neptune", "metaflow",
+    "prefect", "airflow", "ray",
+    # Vector / AI Databases
+    "pinecone", "weaviate", "milvus", "qdrant", "chroma", "pgvector", "faiss",
+    # Infrastructure & Cloud
+    "kubernetes", "aws", "gcp", "azure", "databricks", "snowflake", "spark",
+    # AI Dev Tools & Coding Assistants
+    "copilot", "cursor", "v0", "replit", "tabnine", "codeium", "windsurf",
+    # Specific Models & Products
+    "claude", "gemini", "llama", "stable diffusion", "dall-e", "whisper",
+    # Observability & Evaluation
+    "langfuse", "helicone", "arize", "whylabs", "deepchecks",
+    # Code & Repo Hosting
+    "github",
 ]
 
 
@@ -81,24 +98,23 @@ def get_category(score: float) -> AIReadinessCategory:
     """Determine category from score."""
     if score >= CATEGORY_THRESHOLDS[AIReadinessCategory.TRANSFORMATIONAL]:
         return AIReadinessCategory.TRANSFORMATIONAL
-    elif score >= CATEGORY_THRESHOLDS[AIReadinessCategory.HIGH]:
-        return AIReadinessCategory.HIGH
-    elif score >= CATEGORY_THRESHOLDS[AIReadinessCategory.MEDIUM_HIGH]:
-        return AIReadinessCategory.MEDIUM_HIGH
-    elif score >= CATEGORY_THRESHOLDS[AIReadinessCategory.MEDIUM_LOW]:
-        return AIReadinessCategory.MEDIUM_LOW
+    elif score >= CATEGORY_THRESHOLDS[AIReadinessCategory.LEADING]:
+        return AIReadinessCategory.LEADING
+    elif score >= CATEGORY_THRESHOLDS[AIReadinessCategory.OPERATIONAL]:
+        return AIReadinessCategory.OPERATIONAL
+    elif score >= CATEGORY_THRESHOLDS[AIReadinessCategory.LAGGING]:
+        return AIReadinessCategory.LAGGING
     else:
-        return AIReadinessCategory.LOW
+        return AIReadinessCategory.NO_SIGNAL
 
 
 def get_category_label(category: AIReadinessCategory) -> str:
     """Human-readable category label."""
     labels = {
         AIReadinessCategory.TRANSFORMATIONAL: "Transformational",
-        AIReadinessCategory.HIGH: "Leading",
-        AIReadinessCategory.MEDIUM_HIGH: "On Par/Operational",
-        AIReadinessCategory.MEDIUM_LOW: "Trailing",
-        AIReadinessCategory.LOW: "Lagging",
+        AIReadinessCategory.LEADING: "Leading",
+        AIReadinessCategory.OPERATIONAL: "Operational",
+        AIReadinessCategory.LAGGING: "Lagging",
         AIReadinessCategory.NO_SIGNAL: "No Signal",
     }
     return labels.get(category, "Unknown")

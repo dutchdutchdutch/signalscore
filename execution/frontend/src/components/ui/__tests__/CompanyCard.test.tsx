@@ -19,8 +19,8 @@ const createMockScore = (overrides: Partial<ScoreResponse> = {}): ScoreResponse 
     status: 'completed',
     company_name: 'Test Company',
     score: 4.2,
-    category: 'high',
-    category_label: 'High',
+    category: 'leading',
+    category_label: 'Leading',
     signals: {
         ai_keywords: 10,
         agentic_signals: 5,

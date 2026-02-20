@@ -162,7 +162,7 @@ export interface components {
             company_name: string;
             careers_url?: string | null;
             score: number;
-            category: "high" | "medium_high" | "medium_low" | "low" | "transformational" | "no_signal";
+            category: "transformational" | "leading" | "operational" | "lagging" | "no_signal";
             category_label: string;
             signals: components["schemas"]["SignalResponse"];
             component_scores: components["schemas"]["ComponentScoresResponse"];

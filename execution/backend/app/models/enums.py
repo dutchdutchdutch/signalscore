@@ -2,10 +2,9 @@
 from enum import Enum
 
 class AIReadinessCategory(str, Enum):
-    HIGH = "high"
-    MEDIUM_HIGH = "medium_high"
-    MEDIUM_LOW = "medium_low"
-    LOW = "low"
+    LEADING = "leading"
+    OPERATIONAL = "operational"
+    LAGGING = "lagging"
     TRANSFORMATIONAL = "transformational"
     NO_SIGNAL = "no_signal"
 

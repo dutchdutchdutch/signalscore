@@ -22,6 +22,7 @@ from app.schemas.scores import (
     ScoringStatusResponse,
 )
 from app.services.scoring_jobs import create_job, get_job
+from app.services.scoring.model import get_category_label
 from fastapi.responses import JSONResponse
 
 def _normalize_component_scores(raw: dict) -> dict:
@@ -104,13 +105,13 @@ async def list_scores(db: Session = Depends(get_db)) -> ScoreListResponse:
             careers_url=company.careers_url,
             score=round(latest_score.score, 1),
             category=latest_score.category.value,
-            category_label=latest_score.category.value.replace("_", "-").title(),
+            category_label=get_category_label(latest_score.category),
             signals=SignalResponse(**latest_score.signals),
             component_scores=ComponentScoresResponse(**_normalize_component_scores(latest_score.component_scores)),
             evidence=latest_score.evidence,
             scored_at=latest_score.created_at
         ))
-    
+
     # Combine pilot and DB (deduplicate by name if needed, DB takes precedence?)
     # For MVP, just list both. If name collision, user sees duplicate (acceptable for now).
     
@@ -163,15 +164,20 @@ async def get_job_status(job_id: str):
 async def get_score(company_name: str, db: Session = Depends(get_db)) -> ScoreResponse:
     """Get score for specific company. Checks DB first, then Pilot data."""
     
-    # Check DB
-    stmt = select(Company).where(
-        or_(
-            Company.name == company_name,
-            Company.domain == company_name,
-            Company.url.contains(company_name) # Soft match for URL
-        )
-    )
-    company = db.execute(stmt).scalar_one_or_none()
+    # Check DB — prefer exact name/domain match, fall back to URL contains
+    company = db.execute(
+        select(Company).where(Company.name == company_name)
+    ).scalar_one_or_none()
+
+    if not company:
+        company = db.execute(
+            select(Company).where(Company.domain == company_name)
+        ).scalar_one_or_none()
+
+    if not company:
+        company = db.execute(
+            select(Company).where(Company.url.contains(company_name))
+        ).scalars().first()
     
     if company and company.scores:
         latest_score = company.scores[0] # Ordered by desc created_at
@@ -181,7 +187,7 @@ async def get_score(company_name: str, db: Session = Depends(get_db)) -> ScoreRe
             careers_url=company.careers_url,
             score=round(latest_score.score, 1),
             category=latest_score.category.value,
-            category_label=latest_score.category.value.replace("_", "-").title(),
+            category_label=get_category_label(latest_score.category),
             signals=SignalResponse(**latest_score.signals),
             component_scores=ComponentScoresResponse(**_normalize_component_scores(latest_score.component_scores)),
             evidence=latest_score.evidence,

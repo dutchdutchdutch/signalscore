@@ -11,11 +11,11 @@ import type { ScoreResponse } from '@/lib/api-client/schema';
 // --- Constants & Reference Data ---
 
 const WEIGHTS: Record<string, number> = {
-  ai_keywords: 0.10,
+  ai_keywords: 0.15,
   agentic_signals: 0.20,
   tool_stack: 0.20,
-  non_eng_ai: 0.40,
-  ai_in_it: 0.10,
+  non_eng_ai: 0.20,
+  ai_in_it: 0.25,
 };
 
 const CATEGORY_INFO = {
@@ -43,9 +43,9 @@ const CATEGORY_INFO = {
 
 const SIGNAL_SCALE = [
   { label: 'Transformational', level: 'transformational', range: '95-100', desc: 'Industry-leading AI adoption with agentic workflows.' },
-  { label: 'Leading', level: 'high', range: '80-94', desc: 'Strong AI integration across products and teams.' },
-  { label: 'Operational', level: 'medium_high', range: '60-79', desc: 'Active AI pilots and modernization efforts.' },
-  { label: 'Lagging', level: 'medium_low', range: '30-59', desc: 'Early exploration or isolated experiments.' },
+  { label: 'Leading', level: 'leading', range: '80-94', desc: 'Strong AI integration across products and teams.' },
+  { label: 'Operational', level: 'operational', range: '60-79', desc: 'Active AI pilots and modernization efforts.' },
+  { label: 'Lagging', level: 'lagging', range: '30-59', desc: 'Early exploration or isolated experiments.' },
   { label: 'No Signal', level: 'no_signal', range: '0-29', desc: 'Minimal or no detectable public AI activity.' },
 ];
 

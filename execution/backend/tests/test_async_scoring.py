@@ -54,7 +54,7 @@ def test_async_scoring_flow_existing_company():
     score = Score(
         company_id=company.id,
         score=85.0,
-        category=AIReadinessCategory.HIGH,
+        category=AIReadinessCategory.LEADING,
         signals={
             "tool_stack": ["openai"],
             "ai_keywords": 10,

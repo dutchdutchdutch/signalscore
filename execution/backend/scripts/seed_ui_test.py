@@ -22,7 +22,7 @@ def seed_data():
     score = Score(
         company_id=company.id,
         score=90.0,
-        category=AIReadinessCategory.HIGH,
+        category=AIReadinessCategory.LEADING,
         signals={
             "ai_keywords": 90,
             "agentic_signals": 0,

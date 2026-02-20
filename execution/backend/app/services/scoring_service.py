@@ -290,16 +290,18 @@ class ScoringService:
 
             # 4. Scrape Discovered Sources (Satellite Strategy)
             if discovered_sources:
+                from app.utils.source_detection import detect_source_type
                 print(f"Deep scraping {len(discovered_sources)} satellite sources...")
                 tasks = [self.scraper.scrape(src["url"]) for src in discovered_sources]
                 satellite_results = await asyncio.gather(*tasks)
-                
+
                 for i, res in enumerate(satellite_results):
                     if res.success and res.extracted_text:
                         source_type = discovered_sources[i]['type']
-                        # Handle duplicate source types by appending index or ensuring unique key
-                        # For simple bucket analysis, we can overwrite or append to string
-                        # Better: append to string if key exists
+                        # Re-classify ATS/job links by department using actual content.
+                        # A PM role on Greenhouse should be product_role, not job_posting_verified.
+                        if source_type in ("job_posting_verified", "job_posting"):
+                            source_type = detect_source_type(discovered_sources[i]['url'], res.extracted_text)
                         if source_type in text_segments:
                              text_segments[source_type] += "\n" + res.extracted_text
                         else:
@@ -348,6 +350,7 @@ class ScoringService:
                 print(f"Emergency Crawl found {len(emergency_links)} additional links (total: {len(deep_links)})")
 
             if deep_links:
+                from app.utils.source_detection import detect_source_type
                 scrape_count = min(len(deep_links), 5)  # Scrape up to 5 in emergency mode
                 print(f"Found {len(deep_links)} potential job links. Deep scraping top {scrape_count}...")
                 tasks = [self.scraper.scrape(link) for link in deep_links[:scrape_count]]
@@ -355,23 +358,27 @@ class ScoringService:
 
                 for i, dr in enumerate(deep_results):
                         if dr.success and dr.extracted_text:
-                            if "job_posting" in text_segments:
-                                text_segments["job_posting"] += "\n" + dr.extracted_text
+                            source_type = detect_source_type(deep_links[i], dr.extracted_text)
+                            if source_type in text_segments:
+                                text_segments[source_type] += "\n" + dr.extracted_text
                             else:
-                                text_segments["job_posting"] = dr.extracted_text
+                                text_segments[source_type] = dr.extracted_text
             
-            # 5b. AI Job Penetration Scan — count % of job links mentioning AI/agent
-            ai_job_total, ai_job_hits = self.scan_ai_job_penetration(
-                scrape_result.raw_html if scrape_result.success else ""
-            )
-            if ai_job_total > 0:
-                pct = round(ai_job_hits / ai_job_total * 100, 1)
-                print(f"AI Job Penetration: {ai_job_hits}/{ai_job_total} ({pct}%) job links mention AI/agent")
+            # 5b. Inject Google search snippets as a signal source.
+            # Discovery captures .title + .description from every Google query.
+            # These contain hiring signals, salary info, AI policy mentions, etc.
+            # that may not appear on the pages we scrape.
+            if discovery.collected_snippets:
+                snippet_text = "\n".join(discovery.collected_snippets)
+                text_segments["google_snippets"] = snippet_text
+                log_trace("Google snippets collected", {
+                    "count": len(discovery.collected_snippets),
+                    "chars": len(snippet_text),
+                })
+                print(f"Collected {len(discovery.collected_snippets)} Google search snippets ({len(snippet_text)} chars)")
 
             # 6. Extract & Calculate
             signals = self._extract_signals_heuristically(text_segments)
-            signals.ai_job_total = ai_job_total
-            signals.ai_job_hits = ai_job_hits
 
             score_result = self.calculator.calculate(company_name, signals)
             
@@ -505,7 +512,7 @@ class ScoringService:
             "non_eng_ai_roles": []
         }
         
-        eng_keyword_sources = {"github", "engineering_blog", "job_posting", "job_posting_verified", "ats_link", "careers_fallback"}
+        eng_keyword_sources = {"github", "engineering_blog", "job_posting", "job_posting_verified", "ats_link", "careers_fallback", "subdomain_engineering", "subdomain_dev"}
         non_eng_keywords = 0
         eng_ai_keywords = 0
         ai_success_points = 0
@@ -515,6 +522,58 @@ class ScoringService:
         agentic_count = 0
         non_eng_score = 0
         has_platform_team = False
+
+        # Comprehensive AI/ML tool detection — exact-match terms grouped by category.
+        # Defined here so both analyze_segment and weighted-tool calculation can use it.
+        known_tools = [
+            # Cloud ML Platforms
+            "sagemaker", "vertex ai", "bedrock", "azure ml", "azure openai",
+            "azure cognitive", "google cloud ai", "amazon q",
+            # Frameworks & Libraries
+            "pytorch", "tensorflow", "jax", "keras", "scikit-learn", "sklearn",
+            "xgboost", "lightgbm", "catboost", "onnx", "triton inference",
+            # LLM Providers & APIs
+            "openai", "anthropic", "cohere", "mistral", "groq",
+            "together ai", "fireworks ai", "replicate", "ollama", "perplexity",
+            # LLM Frameworks & Orchestration
+            "langchain", "langgraph", "langsmith", "llamaindex", "llama index",
+            "semantic kernel", "haystack", "dspy", "crewai", "autogen",
+            "model context protocol",
+            # Model Hubs & Pretrained
+            "huggingface", "hugging face", "transformers",
+            # MLOps & Experiment Tracking
+            "mlflow", "kubeflow", "wandb", "weights and biases", "weights & biases",
+            "neptune", "dvc", "dagshub", "prefect", "airflow",
+            "ray", "anyscale", "metaflow",
+            # Vector / AI Databases
+            "pinecone", "weaviate", "milvus", "qdrant", "chroma", "chromadb",
+            "pgvector", "faiss",
+            # Infrastructure & Cloud
+            "kubernetes", "aws", "gcp", "azure", "databricks", "snowflake",
+            "spark", "delta lake", "lakehouse",
+            # AI Dev Tools & Coding Assistants
+            "copilot", "cursor", "v0", "replit", "tabnine", "codeium",
+            "windsurf", "amazon codewhisperer",
+            # Specific Models & Products
+            "claude", "gemini", "llama", "stable diffusion",
+            "dall-e", "midjourney", "whisper",
+            # Observability & Evaluation
+            "langfuse", "helicone", "arize", "whylabs", "deepchecks",
+            # Code & Repo Hosting
+            "github",
+        ]
+        known_tools_set = set(known_tools)
+
+        # Regex patterns for versioned tool names (e.g., "GPT-4o", "Claude 3.5")
+        _tool_regexes = [
+            (r'\bgpt-?\d', "openai"),          # GPT-4, GPT-3.5, GPT4o
+            (r'\bclaude[ -]?\d', "anthropic"),  # Claude 3, Claude-3.5
+            (r'\bgemini[ -]?\d', "gemini"),     # Gemini 1.5, Gemini-Pro
+            (r'\bllama[ -]?\d', "llama"),       # Llama 2, Llama-3
+            (r'\bmistral[ -]?\d', "mistral"),   # Mistral 7B, Mistral-Large
+            (r'\bstable diffusion', "stable diffusion"),
+            (r'\bdall-?e', "dall-e"),
+        ]
 
         # Helper to analyze a segment
         def analyze_segment(source_type: str, text: str):
@@ -561,29 +620,32 @@ class ScoringService:
             ai_plan_points += seg_plan
             ai_generic_points += seg_generic
                 
-            # 2. Tool Stack with Weights (AC1)
-            known_tools = ["pytorch", "tensorflow", "kubernetes", "aws", "gcp", "azure", "databricks", "snowflake", "openai", "anthropic", "langchain", "huggingface", "claude", "github", "copilot", "cursor", "v0", "replit"]
-            
-            # (Weights defined in weights_map below)
+            # 2. Tool Stack Detection
+            # Uses known_tools and _tool_regexes defined in parent scope.
 
+            # Exact-match detection
             for tool in known_tools:
                 if tool in text_lower:
-                    if tool not in tools_found: # Track unique tools globally
+                    if tool not in tools_found:
                         tools_found.add(tool)
-                        # Initialize tracking
                         sources_map["tool_stack"].append(source_type)
-                    
-                    # Add to weighted score (Track max weight per tool?)
-                    # Simplified: We treat weighted_tool_count as a sum of evidence power.
-                    # But we don't want to double count the SAME tool too much.
-                    # Let's say: each UNIQUE tool contributes its MAX found weight.
-                    pass # We will calculate final weight after collecting all occurrences
+
+            # Regex-based detection for versioned tool names
+            for pattern, canonical_name in _tool_regexes:
+                if canonical_name not in tools_found and re.search(pattern, text_lower):
+                    tools_found.add(canonical_name)
+                    sources_map["tool_stack"].append(source_type)
 
             # 3. Agentic Signals
-            # Weighted: Engineering sources count more?
-            # 4.2 Requirement: "Agentic Usage within engineering: Job Descriptions (High), Engineering Blog (High)"
-            segment_agentic = sum(text_lower.count(t) for t in ["agent", "autonomous", "chaos monkey", "spinnaker", "self-healing", "chaos engineering"])
-            
+            # Covers both infrastructure-level (chaos engineering, self-healing) and
+            # product-level (AI-powered automation, workflow, AI assistant) agentic patterns.
+            infra_agentic_terms = ["autonomous", "chaos monkey", "spinnaker", "self-healing", "chaos engineering"]
+            product_agentic_terms = ["ai-powered", "ai powered", "ai assistant", "ai copilot", "automate", "automation", "automated workflow"]
+            segment_agentic = sum(text_lower.count(t) for t in infra_agentic_terms)
+            segment_agentic += sum(text_lower.count(t) for t in product_agentic_terms)
+            # "agent" counted separately — common in both infra and product contexts
+            segment_agentic += text_lower.count("agent")
+
             # Boost if context implies orchestration or AI-friendly documentation
             if any(t in text_lower for t in [
                 "langchain", "autogen", "agentic", "orchestration",
@@ -599,26 +661,60 @@ class ScoringService:
             if segment_agentic > 0:
                  sources_map["agentic_signals"].append(source_type)
 
-            # 4. Non-Engineering AI Roles (Specific Logic)
-            # 4.2 Requirement: "Agentic Usage outside of engineering... Lead and director roles (very high)"
-            # We look for role-specific source types
+            # 4. Non-Engineering AI Roles — Middle Management Thesis
+            # Core hypothesis: middle management roles with heavy communication,
+            # review, and reporting responsibilities (legal, compliance, PM, program
+            # management, finance) should show AI competency as a baseline expectation
+            # at AI-ready companies. No free points for just finding the role —
+            # points come from AI appearing as a SKILL REQUIREMENT in the JD.
             non_eng_role_types = [
                 "product_role", "marketing_role", "legal_role",
                 "operations_role", "design_role", "finance_role",
                 "hr_role", "sales_role",
             ]
             if source_type in non_eng_role_types or source_type == "careers_ai_keyword_hit":
-                # Base points for finding the JD
-                non_eng_score += 2
-                sources_map["non_eng_ai_roles"].append(source_type)
+                # Tier 1: AI as competency/skill requirement (strong signal)
+                # Language that says "you will USE AI" not just "we talk about AI"
+                ai_competency_terms = [
+                    "proficiency with ai", "experience with ai", "familiarity with ai",
+                    "ai tools", "ai-assisted", "ai-augmented", "leverage ai",
+                    "prompt engineering", "ai literacy", "build prototypes",
+                    "use ai to", "using ai", "work with ai", "ai fluency",
+                    "llm", "copilot", "generative ai", "genai",
+                    "ai-powered workflow", "ai-driven", "ai skills",
+                    "chatgpt", "claude", "gemini",
+                ]
+                # Tier 2: AI mentioned in context (weaker signal)
+                # The JD references AI but not as a direct skill expectation
+                ai_mentioned_terms = [
+                    "artificial intelligence", "machine learning",
+                    "automation", "data-driven", "predictive",
+                    "agent", "orchestration", "nlp",
+                ]
 
-                # Check for agentic keywords in this specific JD
-                agentic_keywords = ["agent", "orchestration", "autonomous", "automation", "workflow", "genai", "generative"]
-                if any(k in text_lower for k in agentic_keywords):
-                    non_eng_score += 5
-                    # Extra boost for Director/Lead
-                    if "director" in text_lower or "head of" in text_lower or "lead" in text_lower:
-                        non_eng_score += 5
+                has_competency = any(k in text_lower for k in ai_competency_terms)
+                has_mention = any(k in text_lower for k in ai_mentioned_terms)
+
+                if has_competency:
+                    # Strong: JD expects AI competency as baseline
+                    non_eng_score += 7
+                    sources_map["non_eng_ai_roles"].append(source_type)
+                elif has_mention:
+                    # Weak: AI is referenced but not as a skill requirement
+                    non_eng_score += 2
+                    sources_map["non_eng_ai_roles"].append(source_type)
+                # No points if the role doesn't mention AI at all
+
+                # Seniority boost: reward MIDDLE MANAGEMENT (manager, senior, lead)
+                # over executives (VP, C-suite) — middle management is where
+                # AI-as-competency shows organizational readiness
+                if has_competency or has_mention:
+                    mid_mgmt_terms = ["manager", "senior", "lead", "principal", "counsel", "analyst"]
+                    exec_terms = ["vice president", "vp ", "chief ", "cto", "cfo", "coo", "head of", "director"]
+                    is_mid_mgmt = any(t in text_lower for t in mid_mgmt_terms)
+                    is_exec = any(t in text_lower for t in exec_terms)
+                    if is_mid_mgmt and not is_exec:
+                        non_eng_score += 3  # Middle management bonus
             
             # Conference Speaking (New Source)
             if source_type == "conference_speaking":
@@ -628,7 +724,32 @@ class ScoringService:
                 # We assume if we found it via search, it's about the topic.
                 sources_map["non_eng_ai_roles"].append("conference") # misuse of field? Or maybe add new field?
                 # Let's map it into non-eng score as "Thought Leadership"
-            
+
+            # Google Snippets: Non-Eng AI Role Detection
+            # Snippets are short (title + description from search results) so we
+            # look for co-occurrence of non-eng role titles with AI terms —
+            # e.g. "Generative AI Product Manager" or "AI guidelines for legal".
+            if source_type == "google_snippets":
+                non_eng_role_titles = [
+                    "product manager", "program manager", "project manager",
+                    "legal", "counsel", "compliance", "finance", "financial",
+                    "marketing", "design", "communications", "operations",
+                    "hr ", "human resources", "sales",
+                ]
+                ai_terms_for_roles = [
+                    "ai", "artificial intelligence", "machine learning",
+                    "generative ai", "genai", "llm", "ml ",
+                    "prompt engineering", "ai tools", "ai skills",
+                ]
+                # Check each sentence/snippet line for role+AI co-occurrence
+                for line in text_lower.split("\n"):
+                    has_role = any(r in line for r in non_eng_role_titles)
+                    has_ai = any(a in line for a in ai_terms_for_roles)
+                    if has_role and has_ai:
+                        non_eng_score += 3
+                        sources_map["non_eng_ai_roles"].append("google_snippets")
+                        break  # One strong signal per snippet batch is enough
+
             # Platform Team
             if "platform" in text_lower and "ai" in text_lower:
                 has_platform_team = True
@@ -637,7 +758,7 @@ class ScoringService:
         # To handle max-weight per tool, we need to defer tool counting
         tool_max_weights = {} # tool -> max_weight
         
-        known_tools_set = set(["pytorch", "tensorflow", "kubernetes", "aws", "gcp", "azure", "databricks", "snowflake", "openai", "anthropic", "langchain", "huggingface", "claude", "github", "copilot", "cursor", "v0", "replit"])
+        known_tools_set = set(known_tools)
         weights_map = {
              "github": 2.0,
              "engineering_blog": 1.5,
@@ -656,6 +777,7 @@ class ScoringService:
              "press_release": 0.75,
              "investor_relations": 1.0, # Public commitments to investors
              "newsroom": 0.75,
+             "google_snippets": 0.75, # Search result titles + descriptions
              # Non-eng role types (treat like job postings for tool weighting)
              "product_role": 1.5,
              "marketing_role": 1.0,
@@ -679,6 +801,12 @@ class ScoringService:
                     current_max = tool_max_weights.get(tool, 0.0)
                     if w > current_max:
                         tool_max_weights[tool] = w
+            # Also check regex patterns for weighted calc
+            for pattern, canonical_name in _tool_regexes:
+                if re.search(pattern, txt_lower):
+                    current_max = tool_max_weights.get(canonical_name, 0.0)
+                    if w > current_max:
+                        tool_max_weights[canonical_name] = w
         
         # Calculate Weighted Tool Count
         weighted_tool_count = sum(tool_max_weights.values())
@@ -715,6 +843,36 @@ class ScoringService:
         # Count news-type sources analyzed
         news_sources_found = sum(1 for st in text_segments.keys() if st in NEWS_SOURCE_TYPES)
 
+        # AI Platform Provider Detection
+        # Companies that BUILD and PROVIDE AI tools/platforms to others are
+        # benchmark transformational companies (e.g., Google, Anthropic, OpenAI).
+        # Detection: AI-focused sources contain provider-language content — signs
+        # the company ships AI products for external use, not just uses AI internally.
+        ai_provider_indicators = [
+            "our api", "our sdk", "our model", "our platform",
+            "api reference", "api documentation",
+            "developer documentation", "developer console",
+            "ai studio", "ai platform", "model api",
+            "inference api", "inference endpoint",
+            "fine-tune", "fine tuning", "model deployment",
+            "playground", "model serving", "deploy model",
+            "foundation model", "large language model",
+            "embed our", "build with our", "integrate with our",
+        ]
+        # Check AI-focused source types for provider language.
+        # subdomain_ai is the strongest signal; engineering_blog and homepage
+        # can also contain product descriptions for AI platform companies.
+        ai_focused_types = {"subdomain_ai", "subdomain_dev", "subdomain_cloud", "engineering_blog"}
+        is_ai_platform_provider = False
+
+        for st in ai_focused_types:
+            if st in text_segments:
+                content = text_segments[st].lower()
+                provider_hits = sum(1 for ind in ai_provider_indicators if ind in content)
+                if provider_hits >= 3:
+                    is_ai_platform_provider = True
+                    break
+
         return SignalData(
             ai_keywords=non_eng_keywords,
             agentic_signals=min(agentic_count, 15),
@@ -722,6 +880,7 @@ class ScoringService:
             non_eng_ai_roles=min(non_eng_score, 15),
             ai_in_it_signals=min(eng_ai_keywords, 15),
             has_ai_platform_team=has_platform_team,
+            is_ai_platform_provider=is_ai_platform_provider,
             jobs_analyzed=len(text_segments),
             source_attribution=sources_map,
             marketing_only=marketing_only,
@@ -779,43 +938,6 @@ class ScoringService:
                 filtered_links.append(link)
 
         return list(set(filtered_links))[:10]  # Up to 10 candidates
-
-    @staticmethod
-    def scan_ai_job_penetration(html: str) -> tuple[int, int]:
-        """
-        Scan a careers page for total job links and how many mention AI/agent/agentic.
-        Returns (total_links, ai_hits).
-        """
-        if not html:
-            return 0, 0
-
-        soup = BeautifulSoup(html, "html.parser")
-        ai_terms = [
-            "ai", "artificial intelligence", "machine learning", "ml",
-            "agent", "agentic", "llm", "generative", "genai",
-            "data science", "deep learning",
-        ]
-
-        total = 0
-        ai_hits = 0
-
-        for a in soup.find_all("a", href=True):
-            href = a["href"].lower()
-            text = a.get_text().lower().strip()
-
-            # Only count links that look like job postings (not nav, footer, etc.)
-            if not any(k in href for k in ["career", "job", "position", "role", "apply"]):
-                continue
-            if len(text) < 5:  # Skip tiny link texts like ">" or icons
-                continue
-
-            total += 1
-            # Check link text and href for AI terms
-            combined = f"{text} {href}"
-            if any(term in combined for term in ai_terms):
-                ai_hits += 1
-
-        return total, ai_hits
 
     async def _emergency_crawl(self, base_url: str, homepage_html: str, depth: int = 2) -> list[str]:
         """

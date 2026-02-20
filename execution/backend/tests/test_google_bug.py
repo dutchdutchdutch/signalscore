@@ -46,7 +46,7 @@ def test_google_scenario_api(clean_google):
     score = Score(
         company_id=company.id,
         score=85.0,
-        category=AIReadinessCategory.HIGH,
+        category=AIReadinessCategory.LEADING,
         signals={
             "ai_keywords": 30,
             "agentic_signals": 10,
@@ -76,4 +76,4 @@ def test_google_scenario_api(clean_google):
     data = response.json()
     assert data["company_name"] == "GoogleTest"
     assert data["score"] == 85.0
-    assert data["category"] == "high"
+    assert data["category"] == "leading"

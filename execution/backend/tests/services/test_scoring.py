@@ -16,7 +16,7 @@ def test_calculator_initialization():
     """Test calculator init with defaults."""
     calc = ScoreCalculator()
     assert calc.weights is not None
-    assert calc.weights.ai_keywords == 0.10
+    assert calc.weights.ai_keywords == 0.15
 
 def test_calculator_custom_weights():
     """Test calculator with custom weights."""
@@ -54,7 +54,7 @@ def test_calculate_high_score(calculator):
 
     assert score.company_name == "Nordstrom"
     assert score.score > 40  # With new weights (non_eng_ai=40%, ai_keywords=10%), score shifts
-    assert score.category in [AIReadinessCategory.MEDIUM_LOW, AIReadinessCategory.MEDIUM_HIGH, AIReadinessCategory.HIGH]
+    assert score.category in [AIReadinessCategory.LAGGING, AIReadinessCategory.OPERATIONAL, AIReadinessCategory.LEADING]
     assert any("25 AI keyword points" in e for e in score.evidence)
     assert "Dedicated AI platform/strategy team detected" in score.evidence
 
@@ -72,23 +72,24 @@ def test_calculate_low_score(calculator):
     score = calculator.calculate("Stellantis", signals)
     
     assert score.score < 20
-    assert score.category == AIReadinessCategory.LOW
+    assert score.category == AIReadinessCategory.NO_SIGNAL
     assert score.evidence[0].startswith("1 agentic/automation signals") 
     # Logic in calculator uses agentic_signals > 0 for evidenc
 
 def test_normalization_caps(calculator):
     """Test that signals over the cap don't exceed 100% component score."""
     signals = SignalData(
-        ai_keywords=100, # Way over cap of 30
+        ai_keywords=100, # Way over cap of 40
         agentic_signals=50,
         tool_stack=["t1", "t2", "t3", "t4", "t5", "t6"],
         non_eng_ai_roles=10,
+        ai_in_it_signals=20, # Over cap of 15
         has_ai_platform_team=True
     )
-    
+
     score = calculator.calculate("SuperAI", signals)
-    
-    # Should perfect score 100
+
+    # All components at 100 + excellence boost = 100
     assert score.score == 100.0
     assert score.component_scores["ai_keywords"] == 100.0
 

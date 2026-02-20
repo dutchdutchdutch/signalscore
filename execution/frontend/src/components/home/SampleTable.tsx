@@ -3,11 +3,11 @@ import React from 'react';
 const SAMPLE_DATA = {
     company: 'ACME Anvils',
     categories: [
-        { name: 'AI Keywords', score: 92, weight: '10%', boost: '+9.2' },
+        { name: 'AI Keywords', score: 92, weight: '15%', boost: '+13.8' },
         { name: 'Agentic Signals', score: 65, weight: '20%', boost: '+13.0' },
         { name: 'Modern Tool Stack', score: 88, weight: '20%', boost: '+17.6' },
-        { name: 'AI in Non-Engineering Roles', score: 75, weight: '40%', boost: '+30.0' },
-        { name: 'AI in IT', score: 80, weight: '10%', boost: '+8.0' },
+        { name: 'AI in Non-Engineering Roles', score: 75, weight: '20%', boost: '+15.0' },
+        { name: 'AI in IT', score: 80, weight: '25%', boost: '+20.0' },
     ],
 };
 
