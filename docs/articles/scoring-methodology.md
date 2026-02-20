@@ -37,14 +37,30 @@ The SignalScore architecture operates on the premise that genuine technological 
 
 ### The Five Core Signals (0–100 Rating):
 
-1. **AI Keywords (25%):** Analyzes semantic density, distinguishing generic buzzwords from technical specificity (e.g., "Generative AI" vs. "Transformer Architecture").  
-2. **Agentic Signals (20%):** The most forward-looking metric, hunting for the vocabulary of the *next* phase of AI: "Orchestration," "Self-healing," and "Multi-agent workflows." This detects movement toward Agentic flows.  
-3. **Non-Engineering Roles (25%):** A critical differentiator, scanning for AI adoption in departments like Finance, HR, and Marketing. High scores here indicate Systemic adoption (Gartner Level 4), not isolated R\&D.  
-4. **Tool Stack (20%):** Identifies the "Tools of the Trade" by scraping engineering blogs and job requirements. Presence of libraries like LangChain, PyTorch, or vector databases (Pinecone, Weaviate) proxies technical modernization.  
-5. **AI Platform Team (10%):** Validates the existence of "Acceleration Engineers" or dedicated platform teams, confirming the company is building the "Legibility Layer" required for agents to function on internal data.
+1. **AI Keywords (25%):** Uses a three-tier scoring system that separates signal from noise. **Success Evidence** (3 pts per match) captures proof of AI in production — deployed models, inference pipelines, measurable ROI. **Strategy/Plan** (2 pts) captures roadmap signals — AI-first mandates, Chief AI Officer hires, dedicated budgets. **Generic Mentions** (1 pt) captures baseline references — "machine learning," "data science," "LLM." This tiered approach rewards companies showing results over those only talking about plans.
+2. **Agentic Signals (20%):** The most forward-looking metric, hunting for the vocabulary of the *next* phase of AI: "Orchestration," "Self-healing," "Multi-agent workflows," and emerging indicators like "Model Context Protocol," "LLM-ready documentation," and "AI-friendly documentation." This detects movement toward Agentic flows and AI-optimized infrastructure.
+3. **Non-Engineering Roles (25%):** A critical differentiator, scanning for AI adoption in departments like Finance, HR, Marketing, Legal, Sales, and Operations. High scores here indicate Systemic adoption (Gartner Level 4), not isolated R\&D. Scores are boosted when non-engineering job descriptions contain agentic keywords (agent, orchestration, automation, GenAI), with additional weight for Director and Lead-level roles — signaling executive commitment to AI-augmented workflows.
+4. **Tool Stack (20%):** Identifies the "Tools of the Trade" using source-weighted detection. Tools found in GitHub repos or verified job postings carry higher weight than homepage mentions. Tracked tools include frameworks (PyTorch, TensorFlow), LLM tooling (LangChain, OpenAI, Anthropic, Hugging Face), cloud platforms (AWS, GCP, Azure, Databricks), and AI-native dev tools (Copilot, Cursor, Replit).
+5. **AI in IT (10%):** Measures AI keyword density within engineering-specific sources (GitHub, engineering blogs, verified job postings). Detection of a dedicated AI platform team acts as a score floor, confirming the company is building the infrastructure layer required for agents to function on internal data.
 
-#### Verification and Bonuses  
-To mitigate "AI-washing" risk, source verifiability is weighted: a claim on a "Homepage" is weighted at **0.5x**, while evidence from a GitHub repository or ATS-integrated Job Description is weighted at **2.0x** (Hard Evidence). Additionally, raw category scores are amplified for exceptional depth: a **\+10 Bonus** is awarded if two or more categories score  above 90\.
+#### Verification, Bonuses, and Penalties
+To mitigate "AI-washing" risk, each source type carries a credibility multiplier:
+
+| Source Type | Weight | Rationale |
+| ----- | ----- | ----- |
+| GitHub / Verified Job Posting / ATS Link | **2.0x** | Hard evidence of implementation or hiring intent |
+| Engineering Blog / Careers Page | **1.5x** | Technical depth, active recruiting |
+| Investor Relations | **1.0x** | Public commitments with accountability |
+| News / Press Release | **0.75x** | Third-party coverage, subject to recency decay |
+| Homepage | **0.5x** | Marketing copy, lowest credibility |
+
+**Recency Weighting:** News and press sources are subject to date-based decay — full weight within 45 days, half weight at 45–90 days, zero weight beyond 90 days.
+
+**Excellence Boost:** A **\+10 Bonus** is awarded if two or more categories score above 90, rewarding companies with exceptional depth across multiple signals.
+
+**High-Water Mark ("3 of 5 Rule"):** If three or more categories score above 80, the company is guaranteed at least an "On Par" rating — preventing strong multi-signal profiles from being dragged down by one weak area.
+
+**Marketing-Only Penalty:** If AI keywords appear exclusively on the homepage with zero corroboration from engineering sources (GitHub, blogs, job postings) or investor relations, keyword, tool stack, and AI-in-IT scores are reduced by 50%.
 
 ### SignalScore Readiness Tiers
 
@@ -71,7 +87,7 @@ To mitigate "AI-washing" risk, source verifiability is weighted: a claim on a "H
 | **Microsoft AI Assessment** | 5 drivers of value (Strategy, Culture, Governance) & Cloud Adoption stages. | Self-Evaluation (Wizard) / Hybrid implementation. | Highly Accessible (Wizard); Technical documentation is public. |
 | **Deloitte AI Maturity Models** | Strategy, Data, Tech, Culture, Outcomes, and Applied Trust. | Consultant Assessment (High-touch). | Limited; requires engagement. |
 | **Gartner AI Maturity Model** | 5 levels of development across 7 organizational pillars. | Analyst Assessment / Subscriber Toolkit. | Low; restricted to Gartner clients. |
-| **SignalScore** | 5 weighted public signals: AI Keywords, Agentic Signals, Tool Stack, Non-Eng Roles, AI Platform Team. | Automated External Scraping (Objective/Hard Evidence). | Instant; Open Source web app. |
+| **SignalScore** | 5 weighted public signals: AI Keywords (tiered), Agentic Signals, Tool Stack (source-weighted), Non-Eng Roles, AI in IT. | Automated External Scraping (Objective/Hard Evidence). | Instant; Open Source web app. |
 
 ### DO The Dual Mandate: Defense and Offense
 

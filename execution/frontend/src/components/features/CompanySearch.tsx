@@ -8,10 +8,8 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { SearchInput } from '@/components/ui/SearchInput';
 import { SearchResults } from '@/components/ui/SearchResults';
-import { ProcessingState } from './ProcessingState'; // New component
-import { mockSearch } from '@/lib/mock-data';
+import { ProcessingState } from './ProcessingState';
 import type { Company, ScoreResponse } from '@/lib/api-client/schema';
 import { scoresApi } from '@/lib/api-client';
 import { validateInputUrl } from '@/lib/validators';
@@ -42,6 +40,7 @@ interface CompanySearchProps {
 // Polling configuration
 const POLL_INTERVAL_MS = 4000;
 const TIMEOUT_MS = 240000; // 4 minutes
+const MAX_POLLS = 90; // Hard stop: 6 minutes at 4s intervals
 
 export function CompanySearch({ onCompanySelect, idleContent }: CompanySearchProps) {
     const [query, setQuery] = useState('');
@@ -79,62 +78,68 @@ export function CompanySearch({ onCompanySelect, idleContent }: CompanySearchPro
         // We don't auto-search on type anymore, keeping this simple
     }, []);
 
-    const pollForScore = async (companyName: string) => {
+    const pollCountRef = useRef(0);
+
+    const pollJobStatus = async (jobId: string) => {
+        pollCountRef.current += 1;
+
+        // Hard stop after MAX_POLLS
+        if (pollCountRef.current > MAX_POLLS) {
+            stopPolling();
+            setError('Analysis timed out. Please try again later.');
+            setStatus('failed');
+            return;
+        }
+
+        // Show timeout warning after TIMEOUT_MS but keep polling
+        if (startTimeRef.current && (Date.now() - startTimeRef.current > TIMEOUT_MS)) {
+            setIsTimeout(true);
+        }
+
         try {
-            // Check timeout
-            if (startTimeRef.current && (Date.now() - startTimeRef.current > TIMEOUT_MS)) {
-                setIsTimeout(true);
-                // We typically stop polling here, or we can keep polling but show the warning?
-                // AC3 says "display ... message", doesn't explicitly say STOP. 
-                // But "Ensure user is not stuck in infinite loop". 
-                // Let's stop polling to be safe and let user try again.
-                // Actually, user updated AC: "display ... message... Confirm that the user can navigate away".
-                // I will keep polling but show the timeout warning so if it DOES finish, they get it.
+            const jobStatus = await scoresApi.getJobStatus(jobId);
+
+            if (jobStatus.status === 'completed' && jobStatus.company_name) {
+                // Job done — fetch the full score by company name
+                try {
+                    const result = await scoresApi.get(jobStatus.company_name);
+                    stopPolling();
+
+                    const careersUrl = result.careers_url || query;
+                    const company: Company = {
+                        id: 1,
+                        name: result.company_name,
+                        domain: extractRootDomain(careersUrl),
+                        url: careersUrl,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    };
+
+                    setResults([company]);
+                    setScores({ [result.company_name]: result });
+                    setStatus('completed');
+                } catch {
+                    stopPolling();
+                    setError('Scoring completed but failed to load results. Please refresh.');
+                    setStatus('failed');
+                }
+                return;
             }
 
-            const result = await scoresApi.get(companyName); // Ensure this endpoint handles name or domain lookup correctly
-
-            if (result.status === 'completed') {
+            if (jobStatus.status === 'failed') {
                 stopPolling();
-
-                const careersUrl = result.careers_url || query;
-                const company: Company = {
-                    id: 1,
-                    name: result.company_name,
-                    domain: extractRootDomain(careersUrl),
-                    url: careersUrl,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString()
-                };
-
-                setResults([company]);
-                setScores({ [result.company_name]: result });
-                setStatus('completed');
-                return;
-            } else if (result.status === 'failed') {
-                stopPolling();
-                setError('Analysis failed. The site might be blocking our scrapers or is inaccessible.');
+                setError(jobStatus.error || 'Analysis failed. The site might be blocking our scrapers or is inaccessible.');
                 setStatus('failed');
                 return;
             }
 
-            // Update processing visual if status changes (e.g. backend sends 'extracting')
-            // Just rotate for now if backend doesn't send granular status
-            // If backend sends 'processing', we can stick with that or rotate locally.
-            // For now, let's keep it simple.
-
-            // Continue polling
-            pollTimerRef.current = setTimeout(() => pollForScore(companyName), POLL_INTERVAL_MS);
+            // Still processing — continue polling
+            pollTimerRef.current = setTimeout(() => pollJobStatus(jobId), POLL_INTERVAL_MS);
 
         } catch (err: any) {
-            // If 404, it might mean not found YET? Or actually not found?
-            // Usually GET /scores/Name returns 404 if not exists.
-            // If we just CREATED it, it should exist in 'processing' state.
-            // If it errors, we might want to retry a few times before failing.
             console.error('Poll error', err);
-            // For MVP, we'll keep polling on minor errors, or fail?
-            // Let's fail after a few retries? stick to simple for now.
-            pollTimerRef.current = setTimeout(() => pollForScore(companyName), POLL_INTERVAL_MS);
+            // Retry on transient errors, but count towards MAX_POLLS
+            pollTimerRef.current = setTimeout(() => pollJobStatus(jobId), POLL_INTERVAL_MS);
         }
     };
 
@@ -162,24 +167,29 @@ export function CompanySearch({ onCompanySelect, idleContent }: CompanySearchPro
         try {
             const result = await scoresApi.create({ url: targetUrl });
 
-            if (result.status === 'processing') { // 202
-                // Start polling
-                setProcessingStatus('extracting'); // Move to next visual step
-                // Use company_name from result to poll
-                pollForScore(result.company_name || query);
+            if (result.status === 'processing') {
+                setProcessingStatus('extracting');
+                const jobId = ('job_id' in result) ? result.job_id : undefined;
+                if (jobId) {
+                    pollCountRef.current = 0;
+                    pollJobStatus(jobId);
+                } else {
+                    setError('Server did not return a job ID. Please try again.');
+                    setStatus('failed');
+                }
             } else if (result.status === 'completed') {
-                // Done immediately
-                const careersUrl = result.careers_url || query;
+                const scoreResult = result as ScoreResponse;
+                const careersUrl = scoreResult.careers_url || query;
                 const company: Company = {
                     id: 1,
-                    name: result.company_name,
+                    name: scoreResult.company_name,
                     domain: extractRootDomain(careersUrl),
                     url: careersUrl,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString()
                 };
                 setResults([company]);
-                setScores({ [result.company_name]: result });
+                setScores({ [scoreResult.company_name]: scoreResult });
                 setStatus('completed');
             }
         } catch (err: any) {

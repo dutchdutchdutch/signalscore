@@ -102,7 +102,7 @@ async def rescore_company(
     try:
         result = await service.manual_rescore(
             company_name=request.company_name,
-            careers_url=request.careers_url,
+            careers_url=str(request.careers_url),
             evidence_urls=request.evidence_urls,
             research_mode=request.research_mode
         )

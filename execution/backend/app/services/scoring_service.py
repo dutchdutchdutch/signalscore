@@ -197,11 +197,12 @@ class ScoringService:
                 )
         return None
 
-    async def score_company(self, url: str):
+    async def score_company(self, url: str, job_id: str | None = None):
         """
         Background Task: Score a company.
         Persistence-only, no return value expected by API caller.
         """
+        from app.services.scoring_jobs import update_job
         # 1. Parse domain/name using tldextract
         # This handles subdomains (xyz.google.com -> google.com) and paths (google.com/jobs -> google.com)
         # and complex TLDs (yahoo.co.uk -> yahoo.co.uk)
@@ -312,7 +313,7 @@ class ScoringService:
             # We do this asynchronously or simply just before deep scraping
             print("Scanning for high-signal subdomains...")
             log_trace("Scanning subdomains")
-            subdomains = discovery.discover_subdomains(company_name, domain)
+            subdomains = discovery.discover_subdomains(company_name, root_domain)
             if subdomains:
                 log_trace(f"Found {len(subdomains)} subdomains", [s['url'] for s in subdomains])
                 print(f"Found {len(subdomains)} subdomains: {[s['url'] for s in subdomains]}")
@@ -385,7 +386,7 @@ class ScoringService:
             # 7. Persist
             if score_data:
                 # We need to access the db session. Reusing self.db.
-                company = self._get_or_create_company(company_name, domain, url)
+                company = self._get_or_create_company(company_name, root_domain, url)
                 
                 # Story 4.5: Save trace
                 log_trace("Scoring Complete", {"score": score_data["score"]})
@@ -421,8 +422,13 @@ class ScoringService:
                 self.db.commit()
                 print(f"Successfully scored {company_name}")
 
+                if job_id:
+                    update_job(job_id, "completed", company_name=company_name)
+
         except Exception as e:
             print(f"Error in background scoring task for {url}: {e}", flush=True)
+            if job_id:
+                update_job(job_id, "failed", error=str(e))
             try:
                 with open("debug_scoring.txt", "a") as f:
                     f.write(f"Error for {url}: {e}\n")

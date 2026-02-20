@@ -184,4 +184,11 @@ export const scoresApi = {
             body: JSON.stringify(data),
         });
     },
+
+    /**
+     * Poll the status of a background scoring job
+     */
+    async getJobStatus(jobId: string): Promise<ScoringStatusResponse> {
+        return apiFetch<ScoringStatusResponse>(`/scores/status/${jobId}`);
+    },
 };

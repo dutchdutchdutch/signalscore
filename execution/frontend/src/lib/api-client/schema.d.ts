@@ -171,10 +171,12 @@ export interface components {
             scored_at?: string | null;
         };
         ScoringStatusResponse: {
-            status: "processing";
+            status: "processing" | "completed" | "failed";
             message: string;
+            job_id?: string;
             company_name?: string | null;
             careers_url?: string | null;
+            error?: string | null;
         };
         ScoreListResponse: {
             companies: components["schemas"]["ScoreResponse"][];

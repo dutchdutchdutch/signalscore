@@ -32,11 +32,13 @@ class ComponentScoresResponse(BaseModel):
 
 
 class ScoringStatusResponse(BaseModel):
-    """Response when scoring is in progress."""
+    """Response when scoring is in progress or failed."""
     status: str
     message: str
+    job_id: Optional[str] = None
     company_name: Optional[str] = None
     careers_url: Optional[str] = None
+    error: Optional[str] = None
 
 class SourceResponse(BaseModel):
     url: str

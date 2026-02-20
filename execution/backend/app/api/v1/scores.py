@@ -19,9 +19,10 @@ from app.schemas.scores import (
     ScoreRequest,
     SignalResponse,
     ComponentScoresResponse,
-    ScoringStatusResponse # Added
+    ScoringStatusResponse,
 )
-from fastapi.responses import JSONResponse # Added
+from app.services.scoring_jobs import create_job, get_job
+from fastapi.responses import JSONResponse
 
 def _normalize_component_scores(raw: dict) -> dict:
     """Normalize legacy component score keys from DB data."""
@@ -54,16 +55,16 @@ async def create_score(
     if existing_score:
         return existing_score
 
-    # Start background task
-    # Note: Using service.score_company directly with 'db' session might be unsafe if session closes.
-    # But for this MVP let's try. 
-    background_tasks.add_task(service.score_company, request.url)
-    
+    # Create a tracking job and start background task
+    job_id = create_job(request.url)
+    background_tasks.add_task(service.score_company, request.url, job_id)
+
     return JSONResponse(
         status_code=202,
         content={
             "status": "processing",
             "message": "Analysis started. Please check back later.",
+            "job_id": job_id,
             "careers_url": request.url
         }
     )
@@ -136,6 +137,25 @@ async def list_scores(db: Session = Depends(get_db)) -> ScoreListResponse:
     return ScoreListResponse(
         companies=all_responses,
         count=len(all_responses),
+    )
+
+
+@router.get("/status/{job_id}", response_model=ScoringStatusResponse)
+async def get_job_status(job_id: str):
+    """Poll the status of a background scoring job."""
+    job = get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    return ScoringStatusResponse(
+        status=job["status"],
+        message="Scoring complete." if job["status"] == "completed" else (
+            job["error"] or "Scoring failed." if job["status"] == "failed" else
+            "Analysis in progress..."
+        ),
+        job_id=job_id,
+        company_name=job.get("company_name"),
+        error=job.get("error"),
     )
 
 
