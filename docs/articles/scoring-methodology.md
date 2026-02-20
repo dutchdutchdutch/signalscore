@@ -90,7 +90,7 @@ To mitigate "AI-washing" risk, each source type carries a credibility multiplier
 | **Microsoft AI Assessment** | 5 drivers of value (Strategy, Culture, Governance) & Cloud Adoption stages. | Self-Evaluation (Wizard) / Hybrid implementation. | Highly Accessible (Wizard); Technical documentation is public. |
 | **Deloitte AI Maturity Models** | Strategy, Data, Tech, Culture, Outcomes, and Applied Trust. | Consultant Assessment (High-touch). | Limited; requires engagement. |
 | **Gartner AI Maturity Model** | 5 levels of development across 7 organizational pillars. | Analyst Assessment / Subscriber Toolkit. | Low; restricted to Gartner clients. |
-| **SignalScore** | 5 weighted public signals: AI Keywords (tiered), Agentic Signals, Tool Stack (source-weighted), Non-Eng Roles, AI in IT. | Automated External Scraping (Objective/Hard Evidence). | Instant; Open Source web app. |
+| **SignalScore** | 5 weighted public signals: AI in IT (25%), Agentic Signals (20%), Tool Stack (20%, source-weighted), Non-Eng Roles (20%), AI Keywords (15%, tiered). | Automated External Scraping (Objective/Hard Evidence). | Instant; Open Source web app. |
 
 ### DO The Dual Mandate: Defense and Offense
 
