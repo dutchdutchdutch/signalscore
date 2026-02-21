@@ -67,7 +67,7 @@ jobs:
             --min-instances=0
             --max-instances=3
             --port=8000
-            --set-env-vars=^@^DATABASE_URL=${{ secrets.DATABASE_URL }}@CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}@AUTH_SECRET=${{ secrets.AUTH_SECRET }}
+            --set-env-vars=^~^DATABASE_URL=${{ secrets.DATABASE_URL }}~CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}~AUTH_SECRET=${{ secrets.AUTH_SECRET }}
 
       - name: Show backend URL
         run: echo "Backend deployed to ${{ steps.deploy-backend.outputs.url }}"
