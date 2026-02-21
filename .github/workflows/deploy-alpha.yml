@@ -59,10 +59,6 @@ jobs:
           service: signalscore-backend
           region: us-central1
           image: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          env_vars: |
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
-            AUTH_SECRET=${{ secrets.AUTH_SECRET }}
           flags: |
             --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }}
             --allow-unauthenticated
@@ -71,6 +67,7 @@ jobs:
             --min-instances=0
             --max-instances=3
             --port=8000
+            --set-env-vars=^@^DATABASE_URL=${{ secrets.DATABASE_URL }}@CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}@AUTH_SECRET=${{ secrets.AUTH_SECRET }}
 
       - name: Show backend URL
         run: echo "Backend deployed to ${{ steps.deploy-backend.outputs.url }}"
