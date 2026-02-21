@@ -61,7 +61,7 @@ jobs:
           image: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           env_vars: |
             DATABASE_URL=${{ secrets.DATABASE_URL }}
-            CORS_ORIGINS=["https://signalscore-alpha.web.app","https://signalscore-alpha.firebaseapp.com"]
+            CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}
             AUTH_SECRET=${{ secrets.AUTH_SECRET }}
           flags: |
             --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }}
