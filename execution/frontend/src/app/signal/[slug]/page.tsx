@@ -183,6 +183,7 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
     if (domain) {
       fetchScore(true);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [domain]);
 
   if (loading) {

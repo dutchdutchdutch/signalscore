@@ -128,6 +128,7 @@ export function useCompanies(options?: { limit?: number; offset?: number }) {
         } finally {
             setLoading(false);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [options?.limit, options?.offset]);
 
     useEffect(() => {

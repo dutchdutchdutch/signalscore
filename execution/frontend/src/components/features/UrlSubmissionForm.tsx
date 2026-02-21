@@ -74,7 +74,7 @@ export function UrlSubmissionForm({ companyId, companyName, onSuccess }: UrlSubm
     <div className="submission-form">
       <h3>Submit Evidence to Improve Score</h3>
       <p className="description">
-        To improve {companyName}'s score: check category breakdowns below, then submit up to 3 URLs (Engineering Blog, GitHub, etc.) with AI signals.
+        To improve {companyName}&apos;s score: check category breakdowns below, then submit up to 3 URLs (Engineering Blog, GitHub, etc.) with AI signals.
       </p>
 
       <form onSubmit={handleSubmit} className="form-content">
