@@ -350,3 +350,58 @@ class TestPushSummary:
         assert result.sources_pushed == 2
         assert result.aliases_pushed == 1
         assert result.errors == []
+
+
+# ── CLI & Main Tests ──────────────────────────────────────────────────
+
+from io import StringIO
+import sys
+from unittest.mock import patch
+from scripts.push_scores import print_summary, main
+
+
+class TestCLIAndHelpers:
+    """Tests for CLI arguments, environment variables, and print helpers."""
+
+    def test_print_summary(self):
+        result = PushResult(companies_pushed=1, scores_pushed=2, errors=["Timeout"])
+        captured = StringIO()
+        sys.stdout = captured
+        try:
+            print_summary(result, dry_run=True)
+        finally:
+            sys.stdout = sys.__stdout__
+            
+        output = captured.getvalue()
+        assert "[DRY RUN]" in output
+        assert "Companies: 1" in output
+        assert "Scores:    2" in output
+        assert "Timeout" in output
+
+    @patch("scripts.push_scores.push_scores")
+    @patch("scripts.push_scores.SessionLocal")
+    @patch("scripts.push_scores.create_engine")
+    @patch("sys.argv", ["scripts.push_scores", "--remote-url", "sqlite:///:memory:", "--company", "Acme", "--since", "2026-02-01"])
+    def test_main_cli_args(self, mock_create_engine, mock_session_local, mock_push_scores):
+        mock_push_scores.return_value = PushResult()
+        
+        main()
+        
+        mock_push_scores.assert_called_once()
+        kwargs = mock_push_scores.call_args.kwargs
+        assert kwargs["company_filter"] == "Acme"
+        assert kwargs["since"].year == 2026
+        assert kwargs["since"].month == 2
+        assert kwargs["since"].day == 1
+        assert kwargs["dry_run"] is False
+
+    @patch("scripts.push_scores.push_scores")
+    @patch("scripts.push_scores.SessionLocal")
+    @patch("scripts.push_scores.create_engine")
+    @patch("sys.argv", ["scripts.push_scores", "--remote-url", "sqlite:///:memory:"])
+    def test_main_transaction_rollback(self, mock_create_engine, mock_session_local, mock_push_scores):
+        mock_push_scores.side_effect = Exception("Simulated fatal error")
+        
+        with pytest.raises(Exception, match="Simulated fatal error"):
+            main()
+

@@ -200,6 +200,28 @@ python -m scripts.push_scores \
   --since 2026-02-01
 ```
 
+Pull scoring data from a remote database to local:
+```bash
+# Dry run — preview what would be pulled
+python -m scripts.pull_scores \
+  --remote-url "postgresql+pg8000://user:pass@/dbname?unix_sock=/cloudsql/..." \
+  --dry-run
+
+# Pull all companies, scores, sources, and aliases
+python -m scripts.pull_scores \
+  --remote-url "postgresql+pg8000://user:pass@/dbname?unix_sock=/cloudsql/..."
+
+# Pull a single company
+python -m scripts.pull_scores \
+  --remote-url "..." \
+  --company "Stripe"
+
+# Pull only scores created after a date
+python -m scripts.pull_scores \
+  --remote-url "..." \
+  --since 2026-02-15
+```
+
 The `--remote-url` can also be set via the `REMOTE_DATABASE_URL` environment variable.
 
 ## API Endpoints
