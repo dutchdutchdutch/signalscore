@@ -1,11 +1,11 @@
 #!/bin/sh
 
-# Run Alembic migrations before starting the server
+# Run Alembic migrations before starting the server (with timeout to avoid blocking startup)
 echo "Running database migrations..."
-if alembic upgrade head; then
+if timeout 30 alembic upgrade head 2>&1; then
     echo "Migrations complete."
 else
-    echo "WARNING: Migration failed, starting server anyway."
+    echo "WARNING: Migration failed or timed out, starting server anyway."
 fi
 
 echo "Starting uvicorn..."
