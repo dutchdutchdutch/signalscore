@@ -104,4 +104,11 @@ Build the operational tools that allow the system to scale and self-correct, inc
 Finalize the application for public release with SEO, diagrams, rate limiting, and compliance features.
 **FRs covered:** FR17, NFR5-NFR10
 
+### Epic 6: Alpha Deployment & Data Sync (The "Ship It")
+Deploy the application to Google Firebase for alpha testing and implement bidirectional data sync so scoring data can be pushed from local to remote and pulled from remote to local, avoiding redundant LLM/scraping costs.
+**Stories:**
+- **6-1**: Firebase Alpha Deployment — GitHub Actions pipeline auto-deploys frontend (Firebase Hosting) + backend (Cloud Run) + remote DB on push to `main`.
+- **6-2**: Push Local Scoring Data to Remote — CLI command to upsert local companies/scores/sources/aliases to the deployed environment.
+- **6-3**: Pull Scoring Data from Remote to Local — CLI command to pull remote data back to local SQLite for development and debugging.
+
 {{epics_list}}

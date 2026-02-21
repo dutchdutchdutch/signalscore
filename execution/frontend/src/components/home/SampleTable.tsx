@@ -33,8 +33,8 @@ export function SampleTable() {
                             <div className="text-xs text-purple-400 font-mono">SCORED: 6 Feb 2026</div>
                         </div>
                         <div className="text-right">
-                            <div className="text-3xl font-bold text-blue-400">85</div>
-                            <div className="text-[10px] tracking-wider text-gray-500 uppercase">Advanced</div>
+                            <div className="text-3xl font-bold text-blue-400">79</div>
+                            <div className="text-[10px] tracking-wider text-gray-500 uppercase">Operational</div>
                         </div>
                     </div>
                 </div>

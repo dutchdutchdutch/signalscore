@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { FailureList } from '@/components/admin/FailureList';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE = '';
 
 export default function FailuresPage() {
     const [failures, setFailures] = useState([]);

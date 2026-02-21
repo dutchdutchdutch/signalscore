@@ -1,0 +1,33 @@
+{
+  "hosting": {
+    "public": "execution/frontend/public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "signalscore-backend",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/health",
+        "run": {
+          "serviceId": "signalscore-backend",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "signalscore-frontend",
+          "region": "us-central1"
+        }
+      }
+    ]
+  }
+}

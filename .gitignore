@@ -43,5 +43,11 @@ fix_*_out.txt
 debug_*.txt
 uvicorn_output.txt
 
+# Firebase
+.firebase/
+
+# Story docs (local planning only)
+docs/stories/
+
 # BMAD Agent
 .agent/

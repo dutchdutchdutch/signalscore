@@ -17,6 +17,8 @@ dependencies = [
     "webdriver-manager>=4.0.0",
     "googlesearch-python>=1.2.0",
     "tldextract>=5.0.0",
+    # Postgres driver (pure Python, no libpq needed)
+    "pg8000>=1.30.0",
 ]
 
 [project.optional-dependencies]

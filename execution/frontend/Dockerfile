@@ -14,6 +14,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Accept build-time env vars
+ARG NEXT_PUBLIC_APP_STAGE=EXPERIMENTAL
+ENV NEXT_PUBLIC_APP_STAGE=$NEXT_PUBLIC_APP_STAGE
+
 # Build the application
 RUN npm run build
 

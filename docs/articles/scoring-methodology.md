@@ -29,7 +29,7 @@ SignalScore separates leaders from laggards in AI Readiness \- **providing decis
 * **Investors:** Validate AI adoption claims during due diligence. A company claiming "AI-powered" with a dated tech stack or zero AI platform engineers is a significant red flag.  
 * **Job-Seekers & Employees:** Evaluate if a company's "AI transformation" is real. Job seekers can assess whether a role is forward-looking or AI-vulnerable, while current employees can benchmark their employer against competitors to assess career risk.
 
-The stakes: Organizations scoring above 80 (Leading) achieve 2.8x faster product release cycles. Employees at firms scoring  below 60 (Lagging) face 18-24 month skill obsolescence and 29% wage penalties. SignalScore provides the data to choose acceleration over stagnation.
+The stakes: Organizations scoring above 80 (Leading) achieve 2.8x faster product release cycles. Employees at firms scoring  below 50 (Lagging) face 18-24 month skill obsolescence and 29% wage penalties. SignalScore provides the data to choose acceleration over stagnation.
 
 ## HOW  SingleScore measures  AI Readiness measured
 
@@ -71,8 +71,8 @@ To mitigate "AI-washing" risk, each source type carries a credibility multiplier
 | ----- | ----- | ----- |
 | **95–100** | **Transformational** | Industry-defining AI adoption; agentic workflows in production, AI embedded widely across non-engineering functions. |
 | **80–94** | **Leading** | Strong public signals; dedicated AI platform teams, modern tooling, and AI adoption in non-engineering functions. |
-| **60–79** | **Operational** | Operational AI presence; actively hiring AI roles, some tool adoption, limited agentic signals. |
-| **30–59** | **Lagging** | Early exploration; AI keywords in job posts, but no platform team or systematic deployment. |
+| **50–79** | **Operational** | Operational AI presence; actively hiring AI roles, some tool adoption, limited agentic signals. |
+| **30–49** | **Lagging** | Early exploration; AI keywords in job posts, but no platform team or systematic deployment. |
 | **0–29** | **No Signal** | Minimal public AI activity; homepage mentions AI, but zero engineering evidence. |
 
 **Limitations**

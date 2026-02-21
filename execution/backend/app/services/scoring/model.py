@@ -44,7 +44,7 @@ DEFAULT_WEIGHTS = SignalWeights()
 CATEGORY_THRESHOLDS = {
     AIReadinessCategory.TRANSFORMATIONAL: 95,
     AIReadinessCategory.LEADING: 80,
-    AIReadinessCategory.OPERATIONAL: 60,
+    AIReadinessCategory.OPERATIONAL: 50,
     AIReadinessCategory.LAGGING: 30,
     AIReadinessCategory.NO_SIGNAL: 0,
 }

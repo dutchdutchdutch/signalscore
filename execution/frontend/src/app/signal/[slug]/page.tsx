@@ -44,8 +44,8 @@ const CATEGORY_INFO = {
 const SIGNAL_SCALE = [
   { label: 'Transformational', level: 'transformational', range: '95-100', desc: 'Industry-leading AI adoption with agentic workflows.' },
   { label: 'Leading', level: 'leading', range: '80-94', desc: 'Strong AI integration across products and teams.' },
-  { label: 'Operational', level: 'operational', range: '60-79', desc: 'Active AI pilots and modernization efforts.' },
-  { label: 'Lagging', level: 'lagging', range: '30-59', desc: 'Early exploration or isolated experiments.' },
+  { label: 'Operational', level: 'operational', range: '50-79', desc: 'Active AI pilots and modernization efforts.' },
+  { label: 'Lagging', level: 'lagging', range: '30-49', desc: 'Early exploration or isolated experiments.' },
   { label: 'No Signal', level: 'no_signal', range: '0-29', desc: 'Minimal or no detectable public AI activity.' },
 ];
 
