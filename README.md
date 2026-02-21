@@ -178,6 +178,30 @@ python scripts/rescore_company.py \
   --debug
 ```
 
+Push local scoring data to a remote database:
+```bash
+# Dry run — preview what would be pushed
+python -m scripts.push_scores \
+  --remote-url "postgresql+pg8000://user:pass@/dbname?unix_sock=/cloudsql/..." \
+  --dry-run
+
+# Push all companies, scores, sources, and aliases
+python -m scripts.push_scores \
+  --remote-url "postgresql+pg8000://user:pass@/dbname?unix_sock=/cloudsql/..."
+
+# Push a single company
+python -m scripts.push_scores \
+  --remote-url "..." \
+  --company "Google"
+
+# Push only scores created after a date
+python -m scripts.push_scores \
+  --remote-url "..." \
+  --since 2026-02-01
+```
+
+The `--remote-url` can also be set via the `REMOTE_DATABASE_URL` environment variable.
+
 ## API Endpoints
 
 | Method | Endpoint | Description |
