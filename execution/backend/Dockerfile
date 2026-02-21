@@ -7,12 +7,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Copy all source files needed for install
 COPY pyproject.toml ./
-RUN pip install --no-cache-dir -e .
-
-# Copy application code
 COPY app ./app
+
+# Install Python dependencies
+RUN pip install --no-cache-dir .
 
 # Copy Alembic for migrations
 COPY alembic ./alembic
