@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     
     # Auth (for future JWT validation)
     AUTH_SECRET: str = "dev-secret-change-in-production"
+    # Scoring Limits
+    MAX_CONCURRENT_SCORING_TASKS: int = 4
+    SCORING_RATE_LIMIT_PER_HOUR: int = 25 # Limits NEW companies only
 
     model_config = SettingsConfigDict(
         env_file=".env",

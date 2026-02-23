@@ -137,6 +137,17 @@ def _normalize_component_scores(raw: dict) -> dict:
     return normalized
 
 
+# Global semaphore to limit concurrent scraping tasks and prevent OOM
+_score_semaphore: asyncio.Semaphore | None = None
+
+def get_score_semaphore() -> asyncio.Semaphore:
+    global _score_semaphore
+    if _score_semaphore is None:
+        from app.core.config import settings
+        _score_semaphore = asyncio.Semaphore(settings.MAX_CONCURRENT_SCORING_TASKS)
+    return _score_semaphore
+
+
 class ScoringService:
     def __init__(self, db: Session):
         self.db = db
@@ -202,6 +213,10 @@ class ScoringService:
         Background Task: Score a company.
         Persistence-only, no return value expected by API caller.
         """
+        async with get_score_semaphore():
+            await self._run_score_company(url, job_id)
+
+    async def _run_score_company(self, url: str, job_id: str | None = None):
         from app.services.scoring_jobs import update_job
         # 1. Parse domain/name using tldextract
         # This handles subdomains (xyz.google.com -> google.com) and paths (google.com/jobs -> google.com)

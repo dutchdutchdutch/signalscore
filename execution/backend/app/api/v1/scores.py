@@ -56,8 +56,21 @@ async def create_score(
     if existing_score:
         return existing_score
 
+    # Story 6: Rate Limiting
+    # If get_latest_score didn't find anything, we treat this as a potentially NEW company.
+    # To be perfectly accurate, we could check if the Company row exists but has no scores, 
+    # but treating it as new if it has no score is functionally what we want to rate limit anyway.
+    from app.services.scoring_jobs import can_accept_new_job
+    
+    is_new = True 
+    if not can_accept_new_job(is_new_company=is_new):
+        raise HTTPException(
+            status_code=429,
+            detail="Hourly limit for discovering new companies reached. Please try again later."
+        )
+
     # Create a tracking job and start background task
-    job_id = create_job(request.url)
+    job_id = create_job(request.url, is_new_company=is_new)
     background_tasks.add_task(service.score_company, request.url, job_id)
 
     return JSONResponse(

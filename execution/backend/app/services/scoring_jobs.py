@@ -11,7 +11,7 @@ from typing import Optional
 _jobs: dict[str, dict] = {}
 
 
-def create_job(url: str) -> str:
+def create_job(url: str, is_new_company: bool = False) -> str:
     """Create a new scoring job and return its ID."""
     job_id = uuid.uuid4().hex[:12]
     _jobs[job_id] = {
@@ -19,9 +19,33 @@ def create_job(url: str) -> str:
         "url": url,
         "company_name": None,
         "error": None,
-        "created_at": datetime.now().isoformat(),
+        "is_new_company": is_new_company,
+        "created_at": datetime.now(),
     }
     return job_id
+
+
+def can_accept_new_job(is_new_company: bool) -> bool:
+    """
+    Check if the system can accept a new job based on hourly limits.
+    Rescores (is_new_company=False) are always accepted.
+    New companies are limited by SCORING_RATE_LIMIT_PER_HOUR.
+    """
+    if not is_new_company:
+        return True
+
+    from app.core.config import settings
+    from datetime import timedelta
+
+    cutoff = datetime.now() - timedelta(hours=1)
+    
+    # Count how many NEW company jobs were created in the last hour
+    recent_new_jobs = sum(
+        1 for job in _jobs.values()
+        if job.get("is_new_company", False) and job.get("created_at") and job["created_at"] > cutoff
+    )
+    
+    return recent_new_jobs < settings.SCORING_RATE_LIMIT_PER_HOUR
 
 
 def update_job(
