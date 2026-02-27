@@ -80,40 +80,38 @@ class TestShopifyScraping:
 
     @pytest.mark.asyncio
     @pytest.mark.integration
-    async def test_scrape_shopify_job_posting(self, orchestrator):
+    async def test_scrape_shopify_careers_listing(self, orchestrator):
         """
-        Test scraping a specific Shopify job posting.
-        
+        Test scraping Shopify's main careers page.
+
         This tests the end-to-end flow of:
-        1. Fetching a real job posting page
+        1. Fetching a real careers listing page
         2. Extracting meaningful text content
         """
-        job_url = "https://www.shopify.com/careers/technical-program-manager_6f1f51d3-1659-4259-a99c-bf5c30662357"
-        
-        result = await orchestrator.scrape(job_url)
-        
+        careers_url = "https://www.shopify.com/careers"
+
+        result = await orchestrator.scrape(careers_url)
+
         # Should succeed (Shopify career pages are relatively simple HTML)
         assert result.success is True, f"Failed to scrape: {result.error_message}"
-        
+
         # Should have extracted content
         assert result.raw_html is not None
-        assert len(result.raw_html) > 1000  # Job pages have substantial content
-        
+        assert len(result.raw_html) > 1000  # Career pages have substantial content
+
         # Should have meaningful text
         assert result.extracted_text is not None
         assert len(result.extracted_text) > 100
-        
-        # Should contain job-related keywords
+
+        # Should contain career-related keywords
         text_lower = result.extracted_text.lower()
         assert any(keyword in text_lower for keyword in [
             "shopify",
-            "manager",
-            "technical",
-            "program",
-            "job",
             "career",
+            "job",
+            "team",
             "apply",
-        ]), f"Expected job-related keywords in extracted text"
+        ]), f"Expected career-related keywords in extracted text"
 
     @pytest.mark.asyncio
     @pytest.mark.integration

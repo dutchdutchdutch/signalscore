@@ -157,9 +157,21 @@ async def list_scores(db: Session = Depends(get_db)) -> ScoreListResponse:
 @router.get("/status/{job_id}", response_model=ScoringStatusResponse)
 async def get_job_status(job_id: str):
     """Poll the status of a background scoring job."""
+    from datetime import timedelta
+    from app.services.scoring_jobs import update_job
+
     job = get_job(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
+
+    # Stale job detection: if still processing but no update in 10+ minutes, mark failed
+    if job["status"] == "processing" and job.get("updated_at"):
+        stale_cutoff = datetime.now(job["updated_at"].tzinfo) if job["updated_at"].tzinfo else datetime.now()
+        age = stale_cutoff - job["updated_at"]
+        if age > timedelta(minutes=10):
+            update_job(job_id, "failed", error="Scoring timed out. Please try again.")
+            job["status"] = "failed"
+            job["error"] = "Scoring timed out. Please try again."
 
     return ScoringStatusResponse(
         status=job["status"],
@@ -170,6 +182,7 @@ async def get_job_status(job_id: str):
         job_id=job_id,
         company_name=job.get("company_name"),
         error=job.get("error"),
+        progress_phase=job.get("progress_phase"),
     )
 
 

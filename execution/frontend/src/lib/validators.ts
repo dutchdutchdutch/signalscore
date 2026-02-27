@@ -32,10 +32,12 @@ export function validateInputUrl(input: string): ValidationResult {
         };
     };
 
-    // Normalize to HTTPS if missing protocol
+    // Normalize to HTTPS: add if missing, upgrade http to https
     let urlStr = trimmed;
     if (!hasProtocol) {
         urlStr = 'https://' + urlStr;
+    } else if (/^http:\/\//i.test(urlStr)) {
+        urlStr = urlStr.replace(/^http:\/\//i, 'https://');
     }
 
     try {

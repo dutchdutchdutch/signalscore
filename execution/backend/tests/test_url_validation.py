@@ -2,6 +2,8 @@
 import pytest
 from app.utils.validators import validate_and_normalize_url
 
+pytestmark = pytest.mark.stable
+
 def test_valid_urls_no_scheme():
     assert validate_and_normalize_url("nike.com") == "https://nike.com"
     assert validate_and_normalize_url("tribe.ai") == "https://tribe.ai"

@@ -42,5 +42,5 @@ class ScraperConfig:
     timeout_seconds: int = 30
     respect_robots_txt: bool = True
     cache_duration_hours: int = 24
-    user_agent: str = "SignalScore/0.1 (AI Readiness Research)"
+    user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
     headless: bool = True  # For Selenium

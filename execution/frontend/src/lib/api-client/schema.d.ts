@@ -177,6 +177,7 @@ export interface components {
             company_name?: string | null;
             careers_url?: string | null;
             error?: string | null;
+            progress_phase?: string | null;
         };
         ScoreListResponse: {
             companies: components["schemas"]["ScoreResponse"][];

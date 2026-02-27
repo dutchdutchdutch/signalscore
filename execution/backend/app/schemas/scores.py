@@ -39,6 +39,7 @@ class ScoringStatusResponse(BaseModel):
     company_name: Optional[str] = None
     careers_url: Optional[str] = None
     error: Optional[str] = None
+    progress_phase: Optional[str] = None
 
 class SourceResponse(BaseModel):
     url: str

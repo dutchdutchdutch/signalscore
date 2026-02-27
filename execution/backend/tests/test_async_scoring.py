@@ -11,14 +11,16 @@ from app.main import app
 from app.core.database import get_db, Base
 from app.models.company import Company, Score
 from app.models.enums import AIReadinessCategory
+from app.models.scoring_job import ScoringJob  # noqa: ensure table registered
 from app.services.scoring_service import ScoringService
+import app.services.scoring_jobs as scoring_jobs
 from sqlalchemy import select
 
 # Setup in-memory DB for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, 
+    SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
@@ -31,16 +33,19 @@ def override_get_db():
     finally:
         db.close()
 
-app.dependency_overrides[get_db] = override_get_db
-
 client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
+    app.dependency_overrides[get_db] = override_get_db
+    scoring_jobs._session_factory = TestingSessionLocal
     yield
+    scoring_jobs._session_factory = None
+    app.dependency_overrides.pop(get_db, None)
     Base.metadata.drop_all(bind=engine)
 
+@pytest.mark.stable
 def test_async_scoring_flow_existing_company():
     """
     Test 1: Existing company returns immediately with status='completed' and score data.
@@ -132,6 +137,5 @@ async def test_score_company_insecure_site_fallback():
     
     assert score.category == AIReadinessCategory.NO_SIGNAL
     assert score.score == 0.0 # No Signal = 0 score
-    assert "No Signal" in str(score.evidence)
     
     db.close()

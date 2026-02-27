@@ -5,6 +5,8 @@ H1 Fix: Adding dedicated tests for source type detection logic.
 import pytest
 from app.utils.source_detection import detect_source_type
 
+pytestmark = pytest.mark.stable
+
 
 class TestDetectSourceType:
     """Test cases for source type detection from URLs and text content."""

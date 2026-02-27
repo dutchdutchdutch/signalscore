@@ -8,6 +8,8 @@ from app.services.scoring import (
     SignalWeights,
 )
 
+pytestmark = pytest.mark.stable
+
 @pytest.fixture
 def calculator():
     return ScoreCalculator()

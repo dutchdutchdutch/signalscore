@@ -1,6 +1,8 @@
 
 import pytest
 from app.services.scoring_service import ScoringService
+
+pytestmark = pytest.mark.stable
 from app.models.company import Company
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker

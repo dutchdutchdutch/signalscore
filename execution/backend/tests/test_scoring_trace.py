@@ -7,11 +7,13 @@ from sqlalchemy.pool import StaticPool
 from app.core.database import Base
 from app.services.scoring_service import ScoringService
 from app.models.company import Company
+from app.models.scoring_job import ScoringJob  # noqa: ensure table registered
+import app.services.scoring_jobs as scoring_jobs
 
 # Setup in-memory DB
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, 
+    SQLALCHEMY_DATABASE_URL,
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
@@ -20,7 +22,9 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 @pytest.fixture(autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
+    scoring_jobs._session_factory = TestingSessionLocal
     yield
+    scoring_jobs._session_factory = None
     Base.metadata.drop_all(bind=engine)
 
 @pytest.mark.asyncio

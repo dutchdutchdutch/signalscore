@@ -25,23 +25,28 @@ export function ProcessingState({ status = 'processing', companyName = 'Company'
     }, []);
 
     const getStatusMessage = (currentStatus: string) => {
-        const rotation = [
+        const discoveryRotation = [
+            'Discovering sources...',
+            'Searching for career pages...',
+            'Finding engineering blogs...',
+            'Checking GitHub organizations...',
+        ];
+
+        const scrapingRotation = [
+            'Scraping career pages...',
+            'Analyzing engineering blogs...',
+            'Reading press releases...',
             'Extracting signals...',
-            'Analyzing career pages...',
-            'Checking engineering blogs...',
-            'Identifying AI keywords...',
-            'Calculating score...'
         ];
 
         switch (currentStatus) {
             case 'connecting':
-                return 'Connecting to site...';
+                return discoveryRotation[messageIndex % discoveryRotation.length];
             case 'extracting':
             case 'processing':
-                // Rotate through messages for these states
-                return rotation[messageIndex % rotation.length];
+                return scrapingRotation[messageIndex % scrapingRotation.length];
             case 'calculating':
-                return 'Calculating score...';
+                return 'Calculating AI readiness score...';
             default:
                 return 'Processing request...';
         }
@@ -72,7 +77,7 @@ export function ProcessingState({ status = 'processing', companyName = 'Company'
                     <span className="text-blue-400 mt-0.5 text-lg">ℹ️</span>
                     <div className="space-y-1">
                         <p className="text-sm text-gray-300">
-                            Deep analysis commonly takes <strong>3 to 5 minutes</strong>.
+                            Deep analysis commonly takes <strong>3 to 5 minutes</strong>, but may take longer for larger companies.
                         </p>
                         <p className="text-xs text-gray-500">
                             We scrape careers pages, blogs, and press releases in real-time. You can navigate away and return later; the score will be cached for this URL.

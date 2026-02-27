@@ -39,8 +39,8 @@ interface CompanySearchProps {
 
 // Polling configuration
 const POLL_INTERVAL_MS = 4000;
-const TIMEOUT_MS = 240000; // 4 minutes
-const MAX_POLLS = 90; // Hard stop: 6 minutes at 4s intervals
+const TIMEOUT_MS = 300000; // 5 minutes
+const MAX_POLLS = 150; // Hard stop: 10 minutes at 4s intervals
 
 export function CompanySearch({ onCompanySelect, idleContent }: CompanySearchProps) {
     const [query, setQuery] = useState('');
@@ -133,11 +133,30 @@ export function CompanySearch({ onCompanySelect, idleContent }: CompanySearchPro
                 return;
             }
 
-            // Still processing — continue polling
+            // Still processing — update progress phase from backend
+            if (jobStatus.progress_phase) {
+                const phaseMap: Record<string, typeof processingStatus> = {
+                    'discovery': 'connecting',
+                    'discovery_complete': 'extracting',
+                    'scraping': 'extracting',
+                    'calculating': 'calculating',
+                };
+                const mapped = phaseMap[jobStatus.progress_phase];
+                if (mapped) setProcessingStatus(mapped);
+            }
+
+            // Continue polling
             pollTimerRef.current = setTimeout(() => pollJobStatus(jobId), POLL_INTERVAL_MS);
 
         } catch (err: any) {
             console.error('Poll error', err);
+            // If job not found (404), stop polling — job was lost or expired
+            if (err?.message?.includes('404') || err?.status === 404) {
+                stopPolling();
+                setError('Job not found. It may have expired. Please try scanning again.');
+                setStatus('failed');
+                return;
+            }
             // Retry on transient errors, but count towards MAX_POLLS
             pollTimerRef.current = setTimeout(() => pollJobStatus(jobId), POLL_INTERVAL_MS);
         }

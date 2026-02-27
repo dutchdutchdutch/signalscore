@@ -7,6 +7,6 @@ describe('SampleTable', () => {
 
         expect(screen.getByText('ACME Anvils')).toBeInTheDocument();
         expect(screen.getByText('AI Keywords')).toBeInTheDocument();
-        expect(screen.getByText('85')).toBeInTheDocument();
+        expect(screen.getByText('79')).toBeInTheDocument();
     });
 });

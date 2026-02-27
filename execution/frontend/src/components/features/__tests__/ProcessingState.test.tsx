@@ -5,13 +5,17 @@ import { ProcessingState } from '../ProcessingState';
 describe('ProcessingState', () => {
     it('renders with initial status', () => {
         render(<ProcessingState status="connecting" />);
-        expect(screen.getByText(/Connecting to site/i)).toBeInTheDocument();
+        // First rotation message for 'connecting' is "Discovering sources..."
+        expect(screen.getByText(/Discovering sources/i)).toBeInTheDocument();
         expect(screen.getByText(/Scoring Engine Active/i)).toBeInTheDocument();
     });
 
     it('displays SLA warning', () => {
         render(<ProcessingState status="extracting" />);
-        expect(screen.getByText(/commonly takes 3 to 5 minutes/i)).toBeInTheDocument();
+        // Text is split by <strong> tag, so match the container's full text
+        expect(screen.getByText((_content, el) =>
+            el?.tagName === 'P' && (el?.textContent?.includes('3 to 5 minutes') ?? false)
+        )).toBeInTheDocument();
     });
 
     it('shows methodology link', () => {
@@ -23,13 +27,15 @@ describe('ProcessingState', () => {
 
     it('updates message based on status', () => {
         const { rerender } = render(<ProcessingState status="connecting" />);
-        expect(screen.getByText(/Connecting/i)).toBeInTheDocument();
+        // First rotation message for 'connecting'
+        expect(screen.getByText(/Discovering sources/i)).toBeInTheDocument();
 
         rerender(<ProcessingState status="extracting" />);
-        expect(screen.getByText(/Extracting signals/i)).toBeInTheDocument();
+        // First rotation message for 'extracting' (messageIndex resets to 0 on status change)
+        expect(screen.getByText(/Scraping career pages/i)).toBeInTheDocument();
 
         rerender(<ProcessingState status="calculating" />);
-        expect(screen.getByText(/Calculating score/i)).toBeInTheDocument();
+        expect(screen.getByText(/Calculating AI readiness score/i)).toBeInTheDocument();
     });
 
     it('uses system minimal design tokens', () => {

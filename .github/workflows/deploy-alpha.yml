@@ -67,6 +67,7 @@ jobs:
             --min-instances=0
             --max-instances=3
             --port=8000
+            --no-cpu-throttling
             --set-env-vars=^~^DATABASE_URL=${{ secrets.DATABASE_URL }}~CORS_ORIGINS=${{ secrets.CORS_ORIGINS }}~AUTH_SECRET=${{ secrets.AUTH_SECRET }}
 
       - name: Show backend URL

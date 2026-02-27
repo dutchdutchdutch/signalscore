@@ -85,19 +85,19 @@ describe('CompanyCard', () => {
         })
 
         it('removes www. prefix from domain', () => {
-            const company = createMockCompany({ url: 'https://www.stripe.com' })
+            const company = createMockCompany({ url: 'https://www.stripe.com', domain: null })
             render(<CompanyCard company={company} />)
             expect(screen.getByText('stripe.com')).toBeInTheDocument()
         })
 
         it('handles invalid URL gracefully (falls back to raw value)', () => {
-            const company = createMockCompany({ url: 'invalid-url' })
+            const company = createMockCompany({ url: 'invalid-url', domain: null })
             render(<CompanyCard company={company} />)
             expect(screen.getByText('invalid-url')).toBeInTheDocument()
         })
 
         it('handles null URL', () => {
-            const company = createMockCompany({ url: null })
+            const company = createMockCompany({ url: null, domain: null })
             const { container } = render(<CompanyCard company={company} />)
             expect(container.querySelector('.company-domain')).not.toBeInTheDocument()
         })

@@ -1,11 +1,12 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { vi } from 'vitest';
 import { UrlSubmissionForm } from '../UrlSubmissionForm';
 import { companiesApi } from '@/lib/api-client';
 
 // Mock the API client
-jest.mock('@/lib/api-client', () => ({
+vi.mock('@/lib/api-client', () => ({
     companiesApi: {
-        submitSources: jest.fn(),
+        submitSources: vi.fn(),
     },
     ApiError: class extends Error {
         detail?: string;
@@ -17,15 +18,15 @@ jest.mock('@/lib/api-client', () => ({
 }));
 
 describe('UrlSubmissionForm', () => {
-    const mockSubmitSources = companiesApi.submitSources as jest.Mock;
+    const mockSubmitSources = companiesApi.submitSources as ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
     });
 
     it('renders correctly', () => {
         render(<UrlSubmissionForm companyId={1} companyName="TestCorp" />);
-        expect(screen.getByText('Submit Missing Sources')).toBeInTheDocument();
+        expect(screen.getByText('Submit Evidence to Improve Score')).toBeInTheDocument();
         expect(screen.getByPlaceholderText('https://example.com/blog')).toBeInTheDocument();
     });
 
@@ -61,7 +62,7 @@ describe('UrlSubmissionForm', () => {
     });
 
     it('handles errors', async () => {
-        mockSubmitSources.mockRejectedValue(new Error('API Error'));
+        mockSubmitSources.mockRejectedValue(new Error('Network failure'));
 
         render(<UrlSubmissionForm companyId={1} companyName="TestCorp" />);
 
@@ -71,7 +72,7 @@ describe('UrlSubmissionForm', () => {
         fireEvent.click(screen.getByText('Submit Sources'));
 
         await waitFor(() => {
-            expect(screen.getByText(/API Error/)).toBeInTheDocument();
+            expect(screen.getByText(/Failed to submit URLs/)).toBeInTheDocument();
         });
     });
 

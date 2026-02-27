@@ -3,6 +3,8 @@ from app.services.scoring_service import ScoringService
 from app.services.scoring.calculator import SignalData
 from unittest.mock import MagicMock
 
+pytestmark = pytest.mark.stable
+
 def test_marketing_only_flag():
     """
     Test that if AI terms appear ONLY on homepage, but NOT in engineering sources,

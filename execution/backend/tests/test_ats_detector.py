@@ -3,6 +3,8 @@
 import pytest
 from app.services.scrapers.ats_detector import ATSDetector
 
+pytestmark = pytest.mark.stable
+
 
 class TestATSDetector:
     """Tests for ATS link detection in HTML content."""

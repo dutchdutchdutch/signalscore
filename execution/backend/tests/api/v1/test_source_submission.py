@@ -10,6 +10,8 @@ from app.main import app
 from app.core.database import Base, get_db
 from app.models import Company, CompanySource
 from app.models.enums import VerificationStatus
+from app.models.scoring_job import ScoringJob  # noqa: ensure table registered
+import app.services.scoring_jobs as scoring_jobs
 
 # Test database setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -31,7 +33,9 @@ def override_get_db():
 @pytest.fixture(scope="function")
 def test_db():
     Base.metadata.create_all(bind=engine)
+    scoring_jobs._session_factory = TestingSessionLocal
     yield
+    scoring_jobs._session_factory = None
     Base.metadata.drop_all(bind=engine)
 
 @pytest.fixture(scope="function")
@@ -64,12 +68,20 @@ def test_submit_verified_sources(client, sample_company):
     assert data["pending_count"] == 0
     assert data["status"] == "processing"
 
-    # Check DB
+    # Check DB — the 2 submitted sources should be present and verified.
+    # A background rescore may also add discovery/fallback sources, so check
+    # the submitted URLs specifically rather than total count.
     db = TestingSessionLocal()
-    sources = db.query(CompanySource).filter(CompanySource.company_id == sample_company.id).all()
-    assert len(sources) == 2
-    # Check verification status by value, as enum comparison sometimes tricky across sessions/pickling
-    assert all(s.verification_status == VerificationStatus.VERIFIED or s.verification_status == "verified" for s in sources)
+    all_sources = db.query(CompanySource).filter(
+        CompanySource.company_id == sample_company.id,
+    ).all()
+    source_urls = {s.url for s in all_sources}
+    assert "https://testcorp.com/blog" in source_urls
+    assert "https://engineering.testcorp.com" in source_urls or "https://engineering.testcorp.com/" in source_urls
+    # Verify the submitted ones have verified status
+    for s in all_sources:
+        if s.url in {"https://testcorp.com/blog", "https://engineering.testcorp.com"}:
+            assert s.verification_status == VerificationStatus.VERIFIED or s.verification_status == "verified"
     db.close()
 
 def test_submit_pending_sources(client, sample_company):

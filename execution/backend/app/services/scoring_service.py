@@ -244,16 +244,24 @@ class ScoringService:
 
         log_trace("Starting scoring", {"url": url, "company": company_name})
 
+        # Checkpoint: update job with company name early
+        if job_id:
+            update_job(job_id, "processing", company_name=company_name, progress_phase="discovery")
+
         # 2. Discovery (Run first to allow broad scraping)
         from app.services.discovery import DiscoveryService
         from app.models.company import CompanySource
-        
+
         discovery = DiscoveryService()
         log_trace("DiscoveryService: Finding sources")
         # Run synchronous blocking search in a separate thread
         discovered_sources = await asyncio.to_thread(discovery.find_sources, company_name, root_domain)
         log_trace("DiscoveryService Results", {"count": len(discovered_sources), "sources": [s['url'] for s in discovered_sources]})
         print(f"Discovered {len(discovered_sources)} potential sources: {[s['url'] for s in discovered_sources]}")
+
+        # Checkpoint: discovery complete
+        if job_id:
+            update_job(job_id, "processing", progress_phase="discovery_complete")
 
         # Story 5-7: Load Verified User/Admin Sources
         from app.models.enums import VerificationStatus
@@ -262,6 +270,9 @@ class ScoringService:
         stmt = select(Company).where(Company.domain == root_domain)
         existing_company = self.db.execute(stmt).scalars().first()
         
+        # Track user-submitted URLs so we can report scrape failures
+        user_submitted_urls: set[str] = set()
+
         if existing_company:
             # Load verified sources
             saved_sources = self.db.execute(
@@ -271,20 +282,29 @@ class ScoringService:
                     CompanySource.is_active == True
                 )
             ).scalars().all()
-            
+
             if saved_sources:
                 log_trace("Loaded verified sources from DB", {"count": len(saved_sources)})
                 print(f"Loaded {len(saved_sources)} verified sources from DB")
-                
+
                 for s in saved_sources:
+                     if s.submitted_by == "user":
+                         user_submitted_urls.add(s.url)
                      # Add to discovered_sources if not present
                      if not any(d['url'] == s.url for d in discovered_sources):
                           discovered_sources.append({"url": s.url, "type": s.source_type})
 
+        # Create/find company record early so checkpoints can reference it
+        company = self._get_or_create_company(company_name, root_domain, url)
+
+        # Checkpoint: scraping phase
+        if job_id:
+            update_job(job_id, "processing", progress_phase="scraping")
+
         # 3. Scrape Main URL
         try:
             scrape_result = await self.scraper.scrape(url)
-            
+
             # Collect text segments for analysis
             text_segments = {}
             
@@ -304,6 +324,8 @@ class ScoringService:
                         discovered_sources.append({"url": link, "type": "job_posting_verified"})
 
             # 4. Scrape Discovered Sources (Satellite Strategy)
+            blocked_user_sources: list[dict[str, str]] = []
+
             if discovered_sources:
                 from app.utils.source_detection import detect_source_type
                 print(f"Deep scraping {len(discovered_sources)} satellite sources...")
@@ -311,16 +333,28 @@ class ScoringService:
                 satellite_results = await asyncio.gather(*tasks)
 
                 for i, res in enumerate(satellite_results):
+                    src_url = discovered_sources[i]['url']
                     if res.success and res.extracted_text:
                         source_type = discovered_sources[i]['type']
-                        # Re-classify ATS/job links by department using actual content.
+                        # Re-classify ATS/job links and user-submitted sources by
+                        # department using actual content.
                         # A PM role on Greenhouse should be product_role, not job_posting_verified.
-                        if source_type in ("job_posting_verified", "job_posting"):
-                            source_type = detect_source_type(discovered_sources[i]['url'], res.extracted_text)
+                        # User-submitted sources default to "other" and need classification too.
+                        if source_type in ("job_posting_verified", "job_posting", "other"):
+                            source_type = detect_source_type(src_url, res.extracted_text)
                         if source_type in text_segments:
                              text_segments[source_type] += "\n" + res.extracted_text
                         else:
                              text_segments[source_type] = res.extracted_text
+                    elif src_url in user_submitted_urls:
+                        # Track failures for user-submitted sources so we can inform the user
+                        blocked_user_sources.append({
+                            "url": src_url,
+                            "error": res.error_message or "Unknown error",
+                        })
+                        log_trace("User-submitted source failed to scrape", {
+                            "url": src_url, "error": res.error_message,
+                        })
 
             # 5. Deep Scrape (Internal Job Links)
             deep_links = self._find_job_links(scrape_result.raw_html if scrape_result.success else "", url)
@@ -392,46 +426,48 @@ class ScoringService:
                 })
                 print(f"Collected {len(discovery.collected_snippets)} Google search snippets ({len(snippet_text)} chars)")
 
+            # Checkpoint: save sources incrementally before calculation
+            for src in discovered_sources:
+                if not any(existing.url == src["url"] for existing in company.sources):
+                    new_source = CompanySource(
+                        company_id=company.id,
+                        url=src["url"],
+                        source_type=src["type"]
+                    )
+                    self.db.add(new_source)
+            self.db.commit()
+
+            # Checkpoint: calculating phase
+            if job_id:
+                update_job(job_id, "processing", progress_phase="calculating")
+
             # 6. Extract & Calculate
             signals = self._extract_signals_heuristically(text_segments)
 
             score_result = self.calculator.calculate(company_name, signals)
-            
+
+            # Append warnings for user-submitted sources that couldn't be scraped
+            evidence = list(score_result.evidence)
+            for blocked in blocked_user_sources:
+                evidence.append(
+                    f"BLOCKED: Could not access {blocked['url']} ({blocked['error']})"
+                )
+
             score_data = {
                 "score": score_result.score,
                 "category": score_result.category,
                 "signals": score_result.signals.to_dict(),
                 "component_scores": score_result.component_scores,
-                "evidence": score_result.evidence
+                "evidence": evidence
             }
 
-            # 7. Persist
+            # 7. Persist score
             if score_data:
-                # We need to access the db session. Reusing self.db.
-                company = self._get_or_create_company(company_name, root_domain, url)
-                
                 # Story 4.5: Save trace
                 log_trace("Scoring Complete", {"score": score_data["score"]})
                 company.discovery_trace = {"steps": trace_steps}
                 self.db.add(company)
-                
-                # Save sources
-                for src in discovered_sources:
-                    # Check duplicate? simplistic check
-                    exists = False
-                    for existing in company.sources:
-                        if existing.url == src["url"]:
-                            exists = True
-                            break
-                    
-                    if not exists:
-                        new_source = CompanySource(
-                            company_id=company.id,
-                            url=src["url"],
-                            source_type=src["type"]
-                        )
-                        self.db.add(new_source)
-                
+
                 score_record = Score(
                     company_id=company.id,
                     score=score_data["score"],
@@ -698,6 +734,7 @@ class ScoringService:
                     "llm", "copilot", "generative ai", "genai",
                     "ai-powered workflow", "ai-driven", "ai skills",
                     "chatgpt", "claude", "gemini",
+                    "agentic",
                 ]
                 # Tier 2: AI mentioned in context (weaker signal)
                 # The JD references AI but not as a direct skill expectation

@@ -177,6 +177,8 @@ class DiscoveryService:
         and common ATS platforms. Uses broader vocabulary to catch non-engineering
         roles that involve AI (e.g., "AI tools", "data-driven", "prompt engineering").
         """
+        if self.search_failed:
+            return []
         clean_domain = domain.replace("www.", "")
 
         ai_terms = (
@@ -233,12 +235,12 @@ class DiscoveryService:
     def _check_subdomain_exists(self, url: str) -> bool:
         try:
              # Fast timeout, we just want to know if it responds
-             resp = requests.head(url, timeout=2, allow_redirects=True)
+             resp = requests.head(url, timeout=1, allow_redirects=True)
              if resp.status_code < 400:
                  return True
              # Some sites block HEAD, try GET
              if resp.status_code == 405: # Method Not Allowed
-                 resp = requests.get(url, timeout=2)
+                 resp = requests.get(url, timeout=1)
                  return resp.status_code < 400
         except:
              return False
@@ -279,6 +281,8 @@ class DiscoveryService:
 
     def _search_news_articles(self, company_name: str) -> List[Dict[str, str]]:
         """Search for recent news articles about the company and AI."""
+        if self.search_failed:
+            return []
         wire_domains = ["businesswire.com", "prnewswire.com", "globenewswire.com"]
         news_domains = ["reuters.com", "techcrunch.com", "venturebeat.com"]
         all_domains = wire_domains + news_domains
@@ -316,6 +320,8 @@ class DiscoveryService:
         text itself, which gets collected into self.collected_snippets and
         later analyzed as a signal source.
         """
+        if self.search_failed:
+            return
         queries = [
             # Hiring signals: AI-specific roles with titles and compensation
             f'{company_name} "generative AI" OR "AI product manager" OR "AI engineer" OR "machine learning engineer" job',
@@ -380,6 +386,8 @@ class DiscoveryService:
         return self._perform_search(query, domain_filter=None, keyword_filter="careers")
 
     def _perform_search(self, query: str, domain_filter: Optional[str] = None, keyword_filter: Optional[str] = None) -> Optional[str]:
+        if self.search_failed:
+            return None
         try:
             # num_results=3 is usually enough to find the top hit
             results = list(search(query, num_results=3, advanced=True))

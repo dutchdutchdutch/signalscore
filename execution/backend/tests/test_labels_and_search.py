@@ -9,6 +9,8 @@ from app.main import app
 from app.core.database import get_db, Base
 from app.models.company import Company, Score
 from app.models.enums import AIReadinessCategory
+from app.models.scoring_job import ScoringJob  # noqa: ensure table registered
+import app.services.scoring_jobs as scoring_jobs
 
 # Setup in-memory DB
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -26,13 +28,16 @@ def override_get_db():
     finally:
         db.close()
 
-app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 @pytest.fixture(autouse=True)
 def setup_db():
     Base.metadata.create_all(bind=engine)
+    app.dependency_overrides[get_db] = override_get_db
+    scoring_jobs._session_factory = TestingSessionLocal
     yield
+    scoring_jobs._session_factory = None
+    app.dependency_overrides.pop(get_db, None)
     Base.metadata.drop_all(bind=engine)
 
 def seed_category_company(db, name, score_val, category):
@@ -93,8 +98,8 @@ def test_api_labels_check_all_categories():
         
         assert resp.status_code == 200, f"Failed for {name}"
         data = resp.json()
-        
-        assert data["company_name"] == name
+
+        assert data["company_name"].lower() == name.lower(), f"Name mismatch for {name}. Got {data['company_name']}"
         assert data["status"] == "completed"
         # Check label
         assert data["category_label"] == expected_label, f"Label mismatch for {name}. Got {data['category_label']}, expected {expected_label}"

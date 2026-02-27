@@ -29,8 +29,8 @@ const mockScore = {
         ai_keywords: 4.5,
         agentic_signals: 4.0,
         tool_stack: 4.8,
-        non_eng_ai_roles: 3.5,
-        ai_platform_team: 5.0,
+        non_eng_ai: 3.5,
+        ai_in_it: 5.0,
     },
     evidence: [],
     scored_at: '2026-02-01T00:00:00Z',
@@ -66,11 +66,11 @@ describe('SignalDetailPage', () => {
 
         // Check category breakdown
         expect(screen.getByText('AI Keywords')).toBeInTheDocument()
-        expect(screen.getByText('AI Platform Team')).toBeInTheDocument()
+        expect(screen.getByText('AI in IT')).toBeInTheDocument()
 
         // Check scale reference
-        expect(screen.getByText('Signal Scale Reference')).toBeInTheDocument()
-        expect(screen.getByText('transformational')).toBeInTheDocument()
+        expect(screen.getByText('Score Reference')).toBeInTheDocument()
+        expect(screen.getAllByText('Transformational').length).toBeGreaterThan(0)
     })
 
     it('renders not found state on 404', async () => {

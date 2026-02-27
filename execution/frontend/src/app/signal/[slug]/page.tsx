@@ -290,6 +290,24 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
           </section>
         )}
 
+        {/* Blocked Sources Warning */}
+        {score.evidence && score.evidence.filter(e => e.startsWith('BLOCKED:')).length > 0 && (
+          <section className="blocked-sources-section">
+            <div className="blocked-banner">
+              <span className="blocked-icon">&#9888;</span>
+              <div>
+                <strong>Some submitted URLs could not be accessed</strong>
+                <p>These sites blocked our scraper. Their content was not included in the score.</p>
+                <ul>
+                  {score.evidence.filter(e => e.startsWith('BLOCKED:')).map((msg, idx) => (
+                    <li key={idx}>{msg.replace('BLOCKED: ', '')}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Story 5-7: User URL Submission */}
         {score.company_id && showSubmission && (
           <section className="submission-section">
@@ -494,6 +512,23 @@ export default function SignalDetailPage({ params }: { params: { slug: string } 
 
         /* Sources */
         .sources-section { margin-bottom: 40px; }
+        .blocked-sources-section { margin-bottom: 24px; }
+        .blocked-banner {
+          display: flex;
+          gap: 12px;
+          background: rgba(234, 179, 8, 0.08);
+          border: 1px solid rgba(234, 179, 8, 0.25);
+          border-radius: 10px;
+          padding: 16px;
+          font-size: 14px;
+          color: var(--color-text-secondary);
+          line-height: 1.5;
+        }
+        .blocked-banner strong { color: #eab308; }
+        .blocked-banner p { margin: 4px 0 8px; }
+        .blocked-banner ul { margin: 0; padding-left: 18px; }
+        .blocked-banner li { margin-bottom: 4px; word-break: break-all; }
+        .blocked-icon { font-size: 20px; color: #eab308; flex-shrink: 0; margin-top: 1px; }
         .submission-section { margin-bottom: 40px; }
         .sources-grid {
           display: grid;

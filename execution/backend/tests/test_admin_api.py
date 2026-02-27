@@ -9,6 +9,8 @@ from app.main import app
 from app.core.database import get_db, Base
 from app.api.v1.admin import get_failures
 from app.models.company import Company, Score
+from app.models.scoring_job import ScoringJob  # noqa: ensure table registered
+import app.services.scoring_jobs as scoring_jobs
 from datetime import datetime
 
 # Setup in-memory DB
@@ -20,12 +22,6 @@ engine = create_engine(
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-@pytest.fixture(autouse=True)
-def setup_db():
-    Base.metadata.create_all(bind=engine)
-    yield
-    Base.metadata.drop_all(bind=engine)
-
 def override_get_db():
     try:
         db = TestingSessionLocal()
@@ -33,8 +29,17 @@ def override_get_db():
     finally:
         db.close()
 
-app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
+
+@pytest.fixture(autouse=True)
+def setup_db():
+    Base.metadata.create_all(bind=engine)
+    app.dependency_overrides[get_db] = override_get_db
+    scoring_jobs._session_factory = TestingSessionLocal
+    yield
+    scoring_jobs._session_factory = None
+    app.dependency_overrides.pop(get_db, None)
+    Base.metadata.drop_all(bind=engine)
 
 def test_get_failures_endpoint():
     db_session = TestingSessionLocal()
@@ -51,7 +56,7 @@ def test_get_failures_endpoint():
     # 3. Success Company (Should not appear if filtered, but our logic is loose < 15)
     c3 = Company(name="SuccessCorp", domain="success.com")
     db_session.add(c3)
-    s3 = Score(company=c3, score=85.0, category="HIGH", signals={}, component_scores={}, evidence=[])
+    s3 = Score(company=c3, score=85.0, category="leading", signals={}, component_scores={}, evidence=[])
     db_session.add(s3)
     
     db_session.commit()
