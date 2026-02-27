@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import AnalyticsProvider from '@/components/AnalyticsProvider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -17,6 +18,7 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={inter.variable}>
+                <AnalyticsProvider />
                 {children}
             </body>
         </html>
