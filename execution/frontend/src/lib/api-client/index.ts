@@ -68,8 +68,10 @@ async function apiFetch<T>(
                     // Ignore JSON parse errors
                 }
             } else {
-                // Non-JSON response (e.g., Firebase HTML error page during cold start)
-                detail = 'Server is starting up. Please try again in a moment.';
+                // Non-JSON response — surface the raw status for debugging
+                const rawBody = await response.text().catch(() => '');
+                const snippet = rawBody.slice(0, 200).replace(/<[^>]*>/g, '').trim();
+                detail = `Alpha debug mode: ${response.status} ${response.statusText}${snippet ? ` — ${snippet}` : ''}`;
             }
             throw new ApiError(response.status, response.statusText, detail);
         }
