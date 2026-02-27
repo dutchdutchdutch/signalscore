@@ -97,9 +97,18 @@ class SeleniumScraper(BaseScraper):
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--disable-gpu")
             options.add_argument(f"--user-agent={self.config.user_agent}")
-            
-            # Initialize driver with auto-managed ChromeDriver
-            service = Service(ChromeDriverManager().install())
+
+            # Use system-installed ChromeDriver if available (Cloud Run),
+            # otherwise fall back to webdriver-manager (local dev)
+            import os
+            system_chromedriver = os.environ.get("CHROMEDRIVER_PATH", "/usr/bin/chromedriver")
+            if os.path.exists(system_chromedriver):
+                chrome_binary = os.environ.get("CHROME_BIN", "/usr/bin/chromium")
+                if os.path.exists(chrome_binary):
+                    options.binary_location = chrome_binary
+                service = Service(system_chromedriver)
+            else:
+                service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=options)
             driver.set_page_load_timeout(self.config.timeout_seconds)
             

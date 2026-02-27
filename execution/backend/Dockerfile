@@ -2,10 +2,16 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies + Chromium for Selenium scraping
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
+    chromium \
+    chromium-driver \
     && rm -rf /var/lib/apt/lists/*
+
+# Tell Selenium to use the system-installed Chromium
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 
 # Copy all source files needed for install
 COPY pyproject.toml ./
