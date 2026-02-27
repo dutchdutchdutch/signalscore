@@ -35,34 +35,59 @@ export class ApiError extends Error {
 }
 
 /**
- * Generic fetch wrapper with error handling
+ * Generic fetch wrapper with error handling and timeout
  */
 async function apiFetch<T>(
     path: string,
     options: RequestInit = {},
+    timeoutMs = 45000,
 ): Promise<T> {
     const url = `${API_BASE}${path}`;
 
-    const response = await fetch(url, {
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers,
-        },
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    if (!response.ok) {
-        let detail: string | undefined;
-        try {
-            const errorBody = await response.json();
-            detail = errorBody.detail;
-        } catch {
-            // Ignore JSON parse errors
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+        });
+
+        if (!response.ok) {
+            let detail: string | undefined;
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                try {
+                    const errorBody = await response.json();
+                    detail = errorBody.detail;
+                } catch {
+                    // Ignore JSON parse errors
+                }
+            } else {
+                // Non-JSON response (e.g., Firebase HTML error page during cold start)
+                detail = 'Server is starting up. Please try again in a moment.';
+            }
+            throw new ApiError(response.status, response.statusText, detail);
         }
-        throw new ApiError(response.status, response.statusText, detail);
-    }
 
-    return response.json();
+        return response.json();
+    } catch (err) {
+        if (err instanceof ApiError) throw err;
+        if (err instanceof DOMException && err.name === 'AbortError') {
+            throw new ApiError(
+                408,
+                'Request Timeout',
+                'The server took too long to respond. It may be starting up — please try again.',
+            );
+        }
+        throw err;
+    } finally {
+        clearTimeout(timeoutId);
+    }
 }
 
 /**

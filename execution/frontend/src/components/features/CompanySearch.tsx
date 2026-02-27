@@ -183,9 +183,7 @@ export function CompanySearch({ onCompanySelect, idleContent }: CompanySearchPro
         setProcessingStatus('connecting'); // Initial visual state
         startTimeRef.current = Date.now();
 
-        try {
-            const result = await scoresApi.create({ url: targetUrl });
-
+        const handleCreateResult = (result: ScoreResponse | { status: string; job_id?: string }) => {
             if (result.status === 'processing') {
                 setProcessingStatus('extracting');
                 const jobId = ('job_id' in result) ? result.job_id : undefined;
@@ -211,7 +209,28 @@ export function CompanySearch({ onCompanySelect, idleContent }: CompanySearchPro
                 setScores({ [scoreResult.company_name]: scoreResult });
                 setStatus('completed');
             }
+        };
+
+        try {
+            const result = await scoresApi.create({ url: targetUrl });
+            handleCreateResult(result);
         } catch (err: any) {
+            // Auto-retry once on cold-start-like errors (timeout, 502, 503, 504)
+            const isRetryable = err.status === 408 || err.status === 502 ||
+                                err.status === 503 || err.status === 504;
+            if (isRetryable) {
+                setProcessingStatus('connecting');
+                await new Promise(r => setTimeout(r, 3000));
+                try {
+                    const result = await scoresApi.create({ url: targetUrl });
+                    handleCreateResult(result);
+                    return;
+                } catch (retryErr: any) {
+                    setError(retryErr.message || 'Failed to start analysis. The server may be warming up — please try again.');
+                    setStatus('failed');
+                    return;
+                }
+            }
             setError(err.message || 'Failed to start analysis');
             setStatus('failed');
         }

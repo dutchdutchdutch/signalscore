@@ -76,13 +76,31 @@ class ScraperOrchestrator:
         
         # Execute scrape
         result = await scraper.scrape(url)
-        
+
+        # Thin content fallback: if generic HTML returned very little text
+        # relative to HTML size, the page is likely JS-rendered. Retry with
+        # Selenium to get the full rendered content.
+        if (result.success
+                and scraper.strategy == ScraperStrategy.GENERIC_HTML
+                and self._is_thin_content(result)):
+            logger.info(
+                f"Thin content detected for {url} "
+                f"({len(result.extracted_text or '')} chars text / "
+                f"{len(result.raw_html or '')} chars HTML), retrying with Selenium"
+            )
+            selenium_scraper = self.strategies[0]  # SeleniumScraper
+            retry_result = await selenium_scraper.scrape(url)
+            if (retry_result.success
+                    and len(retry_result.extracted_text or '') > len(result.extracted_text or '')):
+                retry_result.metadata["thin_content_fallback"] = True
+                result = retry_result
+
         # Log outcome
         if result.success:
             logger.info(f"Successfully scraped {url} ({len(result.extracted_text or '')} chars)")
         else:
             logger.warning(f"Failed to scrape {url}: {result.error_message}")
-        
+
         return result
     
     def _select_strategy(
@@ -106,6 +124,13 @@ class ScraperOrchestrator:
         # Fallback to generic (should always exist)
         return self.strategies[-1]
     
+    @staticmethod
+    def _is_thin_content(result: ScraperResult) -> bool:
+        """Detect JS-rendered pages that return large HTML but little visible text."""
+        text_len = len(result.extracted_text or '')
+        html_len = len(result.raw_html or '')
+        return text_len < 500 and html_len > 50_000
+
     async def scrape_batch(
         self,
         urls: list[str],

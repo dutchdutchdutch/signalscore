@@ -39,7 +39,7 @@ class SeleniumScraper(BaseScraper):
         "ashby.io",
         "jobs.ashby.io",
     ]
-    
+
     def can_handle(self, url: str) -> bool:
         """Check if URL matches known JS-heavy patterns."""
         url_lower = url.lower()

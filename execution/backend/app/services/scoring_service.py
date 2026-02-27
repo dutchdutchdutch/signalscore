@@ -308,11 +308,27 @@ class ScoringService:
             # Collect text segments for analysis
             text_segments = {}
             
+            # Track whether direct scraping yielded thin content (JS-rendered pages)
+            thin_content_count = 0
+            total_scrape_count = 0
+
             if not scrape_result.success:
                 # ... existing error handling ...
                 print(f"Scrape failed for {url}")
             else:
-                text_segments["homepage"] = scrape_result.extracted_text or ""
+                homepage_text = scrape_result.extracted_text or ""
+                text_segments["homepage"] = homepage_text
+                total_scrape_count += 1
+                homepage_len = len(homepage_text)
+                html_len = len(scrape_result.raw_html or '')
+                log_trace("Homepage scrape", {
+                    "text_chars": homepage_len,
+                    "html_chars": html_len,
+                    "thin": homepage_len < 500 and html_len > 50_000,
+                    "fallback": bool(isinstance(scrape_result.metadata, dict) and scrape_result.metadata.get("thin_content_fallback")),
+                })
+                if homepage_len < 500:
+                    thin_content_count += 1
                 
                 # Story 4.3: Detect ATS Links (Greenhouse, Lever, etc.)
                 ats_links = discovery.extract_ats_links(scrape_result.raw_html)
@@ -334,7 +350,10 @@ class ScoringService:
 
                 for i, res in enumerate(satellite_results):
                     src_url = discovered_sources[i]['url']
+                    total_scrape_count += 1
                     if res.success and res.extracted_text:
+                        if len(res.extracted_text) < 500:
+                            thin_content_count += 1
                         source_type = discovered_sources[i]['type']
                         # Re-classify ATS/job links and user-submitted sources by
                         # department using actual content.
@@ -417,14 +436,27 @@ class ScoringService:
             # Discovery captures .title + .description from every Google query.
             # These contain hiring signals, salary info, AI policy mentions, etc.
             # that may not appear on the pages we scrape.
+            # When direct scraping yields mostly thin content (JS-rendered sites),
+            # snippets become a more important signal source and get boosted weight.
+            scraping_mostly_thin = (
+                total_scrape_count > 0
+                and thin_content_count / total_scrape_count > 0.5
+            )
             if discovery.collected_snippets:
                 snippet_text = "\n".join(discovery.collected_snippets)
                 text_segments["google_snippets"] = snippet_text
                 log_trace("Google snippets collected", {
                     "count": len(discovery.collected_snippets),
                     "chars": len(snippet_text),
+                    "boosted": scraping_mostly_thin,
                 })
                 print(f"Collected {len(discovery.collected_snippets)} Google search snippets ({len(snippet_text)} chars)")
+
+            if scraping_mostly_thin:
+                log_trace("Thin content detected across scrapes", {
+                    "thin": thin_content_count,
+                    "total": total_scrape_count,
+                })
 
             # Checkpoint: save sources incrementally before calculation
             for src in discovered_sources:
@@ -442,7 +474,9 @@ class ScoringService:
                 update_job(job_id, "processing", progress_phase="calculating")
 
             # 6. Extract & Calculate
-            signals = self._extract_signals_heuristically(text_segments)
+            signals = self._extract_signals_heuristically(
+                text_segments, scraping_mostly_thin=scraping_mostly_thin
+            )
 
             score_result = self.calculator.calculate(company_name, signals)
 
@@ -550,7 +584,7 @@ class ScoringService:
             
         return company
 
-    def _extract_signals_heuristically(self, text_segments: Dict[str, str]) -> SignalData:
+    def _extract_signals_heuristically(self, text_segments: Dict[str, str], *, scraping_mostly_thin: bool = False) -> SignalData:
         """
         Extract signals from segmented text sources to allow weighting and attribution.
         """
@@ -829,7 +863,7 @@ class ScoringService:
              "press_release": 0.75,
              "investor_relations": 1.0, # Public commitments to investors
              "newsroom": 0.75,
-             "google_snippets": 0.75, # Search result titles + descriptions
+             "google_snippets": 1.5 if scraping_mostly_thin else 0.75,  # Boosted when direct scraping yields thin content
              # Non-eng role types (treat like job postings for tool weighting)
              "product_role": 1.5,
              "marketing_role": 1.0,

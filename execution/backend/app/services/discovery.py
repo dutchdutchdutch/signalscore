@@ -1,4 +1,5 @@
 import logging
+import random
 import time
 import requests
 from typing import List, Dict, Optional
@@ -31,14 +32,20 @@ class DiscoveryService:
         """
         Main entry point. Performs multiple searches to find relevant sources.
         Returns a list of dicts: {'url': '...', 'type': '...'}
+
+        Search order is prioritized: highest-signal Google queries run first
+        so that if Google rate-limits us (429), we've already captured the
+        most valuable sources. Non-Google probes always run regardless.
         """
         discovered = []
-        
+
+        # --- HIGH-SIGNAL Google queries (run first) ---
+
         # 1. Search for Engineering Blog
         blog_url = self._search_engineering_blog(company_name, main_domain)
         if blog_url:
             discovered.append({"url": blog_url, "type": "engineering_blog"})
-            
+
         # 2. Search for GitHub Organization
         github_url = self._search_github_org(company_name)
         if github_url:
@@ -48,10 +55,30 @@ class DiscoveryService:
         careers_url = self._search_careers(company_name, main_domain)
         if careers_url:
             discovered.append({"url": careers_url, "type": "careers"})
-            
-        # 4. Search for middle management roles with heavy communication/review/reporting
-        # responsibilities. The hypothesis: these roles should show AI competency as
-        # a baseline expectation at AI-ready companies.
+
+        # 4. Careers keyword search — find job postings mentioning AI/agent/agentic
+        careers_ai_results = self._search_careers_ai_keywords(company_name, main_domain)
+        discovered.extend(careers_ai_results)
+
+        # 5. Search for recent news articles mentioning AI
+        news_results = self._search_news_articles(company_name)
+        discovered.extend(news_results)
+
+        # --- MEDIUM-SIGNAL Google queries ---
+
+        # 6. Targeted AI evidence search — mine Google snippets for hiring,
+        #    strategy, and policy signals that may not appear on the website
+        self._search_ai_evidence(company_name)
+
+        # 7. Search for "AI Conference/Speaking" (Targeting Executive Thought Leadership)
+        conf_query = f'{company_name} "AI" "Conference" "Speaker"'
+        conf_url = self._perform_search(conf_query, domain_filter=None, keyword_filter=None)
+        if conf_url:
+             discovered.append({"url": conf_url, "type": "conference_speaking"})
+
+        # --- LOWER-SIGNAL Google queries (most expendable if 429 hits) ---
+
+        # 8. Search for middle management roles with AI competency signals
         non_eng_role_queries = [
             ("product manager",     "product_role"),
             ("program manager",     "operations_role"),
@@ -68,34 +95,16 @@ class DiscoveryService:
             role_url = self._search_role(company_name, role_query, ai_keywords)
             if role_url:
                  discovered.append({"url": role_url, "type": role_type})
- 
-        # 5. Search for "AI Conference/Speaking" (Targeting Executive Thought Leadership)
-        # Query: company "AI" "Conference" "Speaker"
-        # We try to find video platforms or slide decks or conference agendas
-        conf_query = f'{company_name} "AI" "Conference" "Speaker"'
-        conf_url = self._perform_search(conf_query, domain_filter=None, keyword_filter=None) # No strict keyword filter, maybe "conference"
-        if conf_url:
-             discovered.append({"url": conf_url, "type": "conference_speaking"})
 
-        # 6. Probe for corporate pages (IR, newsroom, press) — no Google query needed
+        # --- NON-GOOGLE probes (always run, no search budget cost) ---
+
+        # 9. Probe for corporate pages (IR, newsroom, press)
         corporate_pages = self._probe_corporate_pages(main_domain)
         discovered.extend(corporate_pages)
 
-        # 7. Search for recent news articles mentioning AI (1 Google query)
-        news_results = self._search_news_articles(company_name)
-        discovered.extend(news_results)
-
-        # 8. Probe alternate TLDs (company.engineering, company.dev, company.ai)
+        # 10. Probe alternate TLDs (company.engineering, company.dev, company.ai)
         alt_tld_sources = self._probe_alternate_tlds(company_name, main_domain)
         discovered.extend(alt_tld_sources)
-
-        # 9. Careers keyword search — find job postings mentioning AI/agent/agentic
-        careers_ai_results = self._search_careers_ai_keywords(company_name, main_domain)
-        discovered.extend(careers_ai_results)
-
-        # 10. Targeted AI evidence search — mine Google snippets for hiring,
-        #     strategy, and policy signals that may not appear on the website
-        self._search_ai_evidence(company_name)
 
         # FALLBACK: If we found NOTHING, it might be a search ban or just poor indexing.
         # Story 4.3: Return heuristic candidates for deep crawling.
@@ -123,6 +132,7 @@ class DiscoveryService:
             ("research", "subdomain_ai"),
             ("labs", "subdomain_ai"),
             ("engineering", "subdomain_engineering"),
+            ("eng", "subdomain_engineering"),  # eng.snap.com, eng.uber.com, etc.
             ("tech", "subdomain_engineering"),
             ("developers", "subdomain_dev"),
             ("developer", "subdomain_dev"),
@@ -207,6 +217,7 @@ class DiscoveryService:
         seen_urls = set()
         for query in queries:
             try:
+                time.sleep(random.uniform(2.0, 4.0))
                 results = list(search(query, num_results=5, advanced=True))
                 # Capture snippet text from all results
                 for result in results:
@@ -292,6 +303,7 @@ class DiscoveryService:
 
         found = []
         try:
+            time.sleep(random.uniform(2.0, 4.0))
             results = list(search(query, num_results=5, advanced=True))
             # Capture snippet text from all results
             for result in results:
@@ -331,6 +343,7 @@ class DiscoveryService:
 
         for query in queries:
             try:
+                time.sleep(random.uniform(2.0, 4.0))
                 results = list(search(query, num_results=5, advanced=True))
                 for result in results:
                     snippet = f"{result.title}. {result.description}"
@@ -389,6 +402,8 @@ class DiscoveryService:
         if self.search_failed:
             return None
         try:
+            # Throttle between queries to avoid Google 429 rate-limiting
+            time.sleep(random.uniform(2.0, 4.0))
             # num_results=3 is usually enough to find the top hit
             results = list(search(query, num_results=3, advanced=True))
 

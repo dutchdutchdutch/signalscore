@@ -146,6 +146,41 @@ describe('CompanySearch Polling', () => {
         expect(screen.getByTestId('idle-content')).toBeInTheDocument();
     });
 
+    it('retries once on cold-start 503 error then succeeds', async () => {
+        // First call: 503 (cold start)
+        vi.mocked(scoresApi.create)
+            .mockRejectedValueOnce({ status: 503, message: 'Service Unavailable' })
+            .mockResolvedValueOnce({
+                status: 'processing',
+                company_name: 'Example',
+                job_id: 'retry-job-1',
+            } as any);
+
+        vi.mocked(scoresApi.getJobStatus).mockResolvedValue({
+            status: 'processing',
+            company_name: 'Example',
+        } as any);
+
+        render(<CompanySearch />);
+        submitUrl('example.com');
+
+        // Wait for the first call to be made and rejected
+        await waitFor(() => {
+            expect(scoresApi.create).toHaveBeenCalledTimes(1);
+        });
+
+        // Advance past the 3s retry delay
+        await act(async () => { vi.advanceTimersByTime(3500); });
+
+        // Should have retried and started polling
+        await waitFor(() => {
+            expect(scoresApi.create).toHaveBeenCalledTimes(2);
+        });
+
+        // Should show processing state (not error)
+        expect(screen.getByText(/Scoring Engine Active/i)).toBeInTheDocument();
+    });
+
     it('hides idleContent when analyzing', async () => {
         vi.mocked(scoresApi.create).mockResolvedValue({
             status: 'processing',

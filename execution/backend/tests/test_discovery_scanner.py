@@ -54,12 +54,12 @@ def test_discover_subdomains_fallback_get(discovery_service):
         # The code iterates ALL prefixes.
         
         results = discovery_service.discover_subdomains("Example", "example.com")
-        
+
         # We expect it to try HEAD then GET for each.
-        # Since we mocked return_value (not side_effect) for all calls, 
+        # Since we mocked return_value (not side_effect) for all calls,
         # it effectively finds ALL prefixes because GET returns 200 for everything.
-        # There are 11 prefixes in the code.
-        assert len(results) == 11
+        # There are 12 prefixes in the code (including "eng").
+        assert len(results) == 12
         assert mock_get.called
 
 def test_discover_subdomains_none(discovery_service):
@@ -68,6 +68,22 @@ def test_discover_subdomains_none(discovery_service):
         mock_resp = MagicMock()
         mock_resp.status_code = 404
         mock_head.return_value = mock_resp
-        
+
         results = discovery_service.discover_subdomains("Example", "example.com")
         assert len(results) == 0
+
+def test_discover_subdomains_finds_eng(discovery_service):
+    """Test that eng.company.com is discovered (e.g., eng.snap.com)."""
+    with patch("requests.head") as mock_head:
+        def side_effect(url, timeout, allow_redirects):
+            mock_resp = MagicMock()
+            mock_resp.status_code = 200 if "eng.snap.com" in url else 404
+            return mock_resp
+
+        mock_head.side_effect = side_effect
+
+        results = discovery_service.discover_subdomains("Snap", "snap.com")
+
+        assert len(results) == 1
+        assert results[0]["url"] == "https://eng.snap.com"
+        assert results[0]["type"] == "subdomain_engineering"
