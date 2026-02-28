@@ -104,6 +104,13 @@ jobs:
         run: |
           docker build \
             --build-arg NEXT_PUBLIC_APP_STAGE=Alpha \
+            --build-arg NEXT_PUBLIC_FIREBASE_API_KEY=${{ secrets.FIREBASE_API_KEY }} \
+            --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=signalscore-alpha.firebaseapp.com \
+            --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID=signalscore-alpha \
+            --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=signalscore-alpha.firebasestorage.app \
+            --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.FIREBASE_MESSAGING_SENDER_ID }} \
+            --build-arg NEXT_PUBLIC_FIREBASE_APP_ID=${{ secrets.FIREBASE_APP_ID }} \
+            --build-arg NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=${{ secrets.FIREBASE_MEASUREMENT_ID }} \
             -t ${{ env.FRONTEND_IMAGE }}:${{ github.sha }} \
             -t ${{ env.FRONTEND_IMAGE }}:latest \
             execution/frontend

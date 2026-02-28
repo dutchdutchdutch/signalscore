@@ -3,13 +3,13 @@ import { getAnalytics, isSupported } from 'firebase/analytics';
 import { getPerformance } from 'firebase/performance';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyB1YMHiEbAHuJdSOHDJ0BxL_r0duOo2-j8",
-    authDomain: "signalscore-alpha.firebaseapp.com",
-    projectId: "signalscore-alpha",
-    storageBucket: "signalscore-alpha.firebasestorage.app",
-    messagingSenderId: "199018949052",
-    appId: "1:199018949052:web:7c54d9e4c0a64984ad63b9",
-    measurementId: "G-ECK5CGLC79",
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
+    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || '',
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
