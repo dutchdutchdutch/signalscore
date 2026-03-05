@@ -22,7 +22,15 @@ export function Footer() {
                     </a>
                 </div>
                 <p className="mt-4 text-xs text-gray-400">
-                    &copy; {new Date().getFullYear()} SignalScore. Open Source.
+                    &copy; {new Date().getFullYear()} SignalScore by{' '}
+                    <a
+                        href="https://mathcon3c.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
+                        Mathcon3C
+                    </a>
                 </p>
             </div>
         </footer>

@@ -102,10 +102,10 @@ The established consulting frameworks are designed to measure compliance and fou
 
 ## Act Now
 
-* **[Score Your Company](https://signalscore-app.com)**
-* **[Connect with SignalScore](mailto:dutch@signalscore.com)** Inquire about domain customizations.
+* **[Score Your Company](https://signalscore-alpha.web.app/)**
+* **[Connect with dutch@mathcon3c.com](mailto:dutch@mathcon3c.com)** Inquire about domain customizations.
 ---
 #### Development Notice and Forward Looking Information
- SignalScore is an active research project. Scoring methodology, benchmark correlations, and performance predictions described here represent current implementation and preliminary findings, subject to revision as validation data expands. Scores reflect publicly observable signals only—not comprehensive internal capabilities. Not investment, employment, or strategic advice. Conduct independent research before making decisions. See github.com/dutchdutchdutch/signalscore for current limitations.
+ SignalScore is an active research project. Scoring methodology, benchmark correlations, and performance predictions described here represent current implementation and preliminary findings, subject to revision as validation data expands. Scores reflect publicly observable signals only—not comprehensive internal capabilities. Not investment, employment, or strategic advice. Conduct independent research before making decisions. See [github.com/dutchdutchdutch/signalscore](https://github.com/dutchdutchdutch/signalscore) for current limitations.
 
 *Contributions and feedback are welcome on [GitHub](https://github.com/dutchdutchdutch/signalscore).*
