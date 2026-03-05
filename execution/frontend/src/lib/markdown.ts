@@ -8,23 +8,32 @@ type Article = {
     content: string;
 };
 
-const ARTICLES_DIR = path.join(process.cwd(), '../../docs/articles');
+// In production (standalone Docker), the file is copied to /app/content/articles/
+// In development, resolve from the repo root via ../../docs/articles/
+const ARTICLES_PATHS = [
+    path.join(process.cwd(), 'content/articles'),
+    path.join(process.cwd(), '../../docs/articles'),
+];
 
-// For now we only have one article, but nice to have a helper
-// For now we only have one article, but nice to have a helper
 export async function getMethodologyArticle(): Promise<Article | null> {
-    try {
-        const filePath = path.join(ARTICLES_DIR, 'scoring-methodology.md');
-        const fileContent = await fs.promises.readFile(filePath, 'utf8');
-        const { data, content } = matter(fileContent);
+    const filename = 'scoring-methodology.md';
 
-        return {
-            slug: 'scoring-methodology',
-            frontmatter: data,
-            content,
-        };
-    } catch (error) {
-        console.error('Error reading methodology article:', error);
-        return null;
+    for (const dir of ARTICLES_PATHS) {
+        try {
+            const filePath = path.join(dir, filename);
+            const fileContent = await fs.promises.readFile(filePath, 'utf8');
+            const { data, content } = matter(fileContent);
+
+            return {
+                slug: 'scoring-methodology',
+                frontmatter: data,
+                content,
+            };
+        } catch {
+            // Try next path
+        }
     }
+
+    console.error('Error reading methodology article: file not found in any search path');
+    return null;
 }

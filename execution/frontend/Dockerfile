@@ -13,6 +13,8 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Ensure content directory exists (populated by CI with article markdown files)
+RUN mkdir -p content/articles
 
 # Accept build-time env vars
 ARG NEXT_PUBLIC_APP_STAGE=EXPERIMENTAL
@@ -39,6 +41,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/content ./content
 
 # Set the correct permission for prerender cache
 RUN mkdir .next

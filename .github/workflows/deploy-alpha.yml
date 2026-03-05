@@ -100,6 +100,11 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
+      - name: Copy article content into frontend build context
+        run: |
+          mkdir -p execution/frontend/content/articles
+          cp docs/articles/*.md execution/frontend/content/articles/
+
       - name: Build frontend Docker image
         run: |
           docker build \
