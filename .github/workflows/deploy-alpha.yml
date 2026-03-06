@@ -62,7 +62,7 @@ jobs:
           flags: |
             --add-cloudsql-instances=${{ secrets.CLOUD_SQL_CONNECTION_NAME }}
             --allow-unauthenticated
-            --memory=512Mi
+            --memory=1Gi
             --cpu=1
             --min-instances=1
             --max-instances=3

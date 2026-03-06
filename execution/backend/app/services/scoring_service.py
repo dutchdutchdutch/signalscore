@@ -213,8 +213,19 @@ class ScoringService:
         Background Task: Score a company.
         Persistence-only, no return value expected by API caller.
         """
-        async with get_score_semaphore():
-            await self._run_score_company(url, job_id)
+        try:
+            async with get_score_semaphore():
+                await self._run_score_company(url, job_id)
+        except Exception as e:
+            import traceback
+            print(f"FATAL: Unhandled error in scoring task for {url}: {e}", flush=True)
+            traceback.print_exc()
+            if job_id:
+                from app.services.scoring_jobs import update_job
+                try:
+                    update_job(job_id, "failed", error=str(e))
+                except Exception:
+                    print(f"FATAL: Could not update job {job_id} to failed", flush=True)
 
     async def _run_score_company(self, url: str, job_id: str | None = None):
         from app.services.scoring_jobs import update_job
@@ -518,14 +529,11 @@ class ScoringService:
                     update_job(job_id, "completed", company_name=company_name)
 
         except Exception as e:
+            import traceback
             print(f"Error in background scoring task for {url}: {e}", flush=True)
+            traceback.print_exc()
             if job_id:
                 update_job(job_id, "failed", error=str(e))
-            try:
-                with open("debug_scoring.txt", "a") as f:
-                    f.write(f"Error for {url}: {e}\n")
-            except:
-                pass
 
 
     def _get_or_create_company(self, name: str, domain: str, url: str) -> Company:
