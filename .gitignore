@@ -23,6 +23,7 @@ yarn-error.log*
 # Python / Backend
 __pycache__/
 *.py[cod]
+*.db
 *$py.class
 .venv/
 venv/
