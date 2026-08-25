@@ -52,3 +52,6 @@ docs/stories/
 
 # BMAD Agent
 .agent/
+
+# Cloned external repo (reference only)
+notebooklm-py/

@@ -39,11 +39,11 @@ Companies are analyzed across five weighted signal categories:
 
 | Category | Weight | Description |
 |:---------|:-------|:------------|
-| **AI Keywords** | 25% | Frequency of AI/ML terms (e.g., "machine learning", "LLM", "generative AI") |
+| **AI in IT** | 25% | AI keyword density in engineering-specific sources (GitHub, engineering blogs, verified job postings) |
 | **Agentic Signals** | 20% | Evidence of autonomous systems (e.g., "orchestration", "self-healing", "agents") |
 | **Tool Stack** | 20% | Presence of known AI tools (PyTorch, SageMaker, LangChain, etc.) |
-| **Non-Eng AI Roles** | 25% | AI adoption in non-engineering functions (Marketing, HR, Finance) |
-| **AI Platform Team** | 10% | Dedicated AI/ML infrastructure or platform team |
+| **Non-Eng AI Roles** | 20% | AI adoption in non-engineering functions (Marketing, HR, Finance) |
+| **AI Keywords** | 15% | Tiered AI/ML term frequency: success evidence (3 pts), strategy/plan (2 pts), generic mentions (1 pt) |
 
 ### Verification & Benchmarking
 
@@ -71,17 +71,17 @@ Signals are weighted based on the verifiability of their source. The system prio
 3. Category scores are **weighted and summed** to produce a final score (0–100).
 4. **Signal Booster** logic rewards "spikey" excellence:
    - +10 bonus if 2+ categories score ≥ 90
-   - Minimum "On Par" category if 3+ categories score ≥ 80
+   - Minimum "Operational" category if 3+ categories score ≥ 80
 
 ### Readiness Categories
 
 | Score Range | Category | Description |
 |:------------|:---------|:------------|
-| **95–100** | Transformational | Industry-defining AI adoption |
+| **95–100** | Transformational | Industry-defining AI adoption; agentic workflows in production, AI embedded across functions |
 | **80–94** | Leading | Strong public AI signals, dedicated teams, modern tooling |
-| **60–79** | On Par | Operational AI presence, actively hiring for AI roles |
-| **30–59** | Trailing | Limited AI signals, early exploration phase |
-| **0–29** | Lagging | Minimal or no public AI activity |
+| **50–79** | Operational | Active AI presence, hiring AI roles, some tool adoption |
+| **30–49** | Lagging | Early exploration; AI keywords in job posts but no platform team or systematic deployment |
+| **0–29** | No Signal | Minimal public AI activity; homepage mentions but zero engineering evidence |
 
 ### What Qualifies as "Leading"
 
@@ -89,7 +89,7 @@ A company typically scores **80+** (Leading) when it demonstrates:
 - **30+** AI/ML keywords across careers and blog content
 - Evidence of **agentic/autonomous systems** (workflows, orchestration, self-healing)
 - Use of **5+ modern AI tools** (LangChain, PyTorch, SageMaker, etc.)
-- A **dedicated AI Platform or Strategy team**
+- Strong **AI in IT** signals — AI keywords in engineering-specific sources (GitHub, engineering blogs, verified job postings)
 - AI adoption in **non-engineering functions** (e.g., "AI in Marketing")
 - Presence of dedicated **AI/Engineering subdomains** (e.g., `ai.company.com`, `research.company.com`)
 

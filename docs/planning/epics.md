@@ -69,7 +69,7 @@ FR02: Epic 2 - Score Display.
 FR03: Epic 2 - Evidence List.
 FR04: Epic 2 - Confidence Level.
 FR05: Epic 4 - User Submissions (Queue).
-FR06: Epic 3 - View Modes.
+FR06: Epic 3 - View Modes.1
 FR07: Epic 1 - Base Scraping.
 FR08: Epic 1 - Scraping Strategies.
 FR09: Epic 2 - Role Classification.
